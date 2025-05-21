@@ -1,0 +1,18 @@
+function Button({
+  onClick,
+  children
+}: {
+  onClick?: React.MouseEventHandler<HTMLElement>
+  children: React.ReactNode
+}): React.ReactElement {
+  return (
+    <button
+      onClick={onClick}
+      className="flex flex-row justify-center items-center gap-1 bg-mg text-accent font-bold px-4 py-2 rounded-xl text-xs hover:cursor-pointer"
+    >
+      {children}
+    </button>
+  )
+}
+
+export default Button
