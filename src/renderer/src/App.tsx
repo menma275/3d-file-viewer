@@ -1,5 +1,6 @@
 import MainCanvas from './components/Canvas'
 import Button from './components/Button'
+import OpenDialog from './components/OpenDialog'
 
 import { FaRegBell } from 'react-icons/fa6'
 
@@ -13,7 +14,7 @@ function App(): React.ReactElement {
         className="absolute bottom-0 left-0 p-8 pt-12 w-fit h-full flex flex-col
         justify-end items-center"
       >
-        <div className="flex flex-row w-full justify-between">
+        <div className="flex flex-row gap-2 w-full justify-between">
           <Button
             onClick={() => {
               alert('Hello!')
@@ -21,6 +22,7 @@ function App(): React.ReactElement {
           >
             <FaRegBell />
           </Button>
+          <OpenDialog />
         </div>
       </div>
     </div>

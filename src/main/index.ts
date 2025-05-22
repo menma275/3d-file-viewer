@@ -54,7 +54,7 @@ app.whenReady().then(() => {
       properties: ['openDirectory']
     })
     if (canceled) return null
-    return filePaths
+    return filePaths[0]
   })
 
   createWindow()
