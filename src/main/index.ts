@@ -2,6 +2,9 @@ import { app, shell, BrowserWindow, ipcMain, dialog } from 'electron'
 import { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import icon from '../../resources/icon.png?asset'
+import { v4 as uuidv4 } from 'uuid'
+import Store from 'electron-store'
+import type { FolderPath, FolderSchema } from '../types/index'
 
 function createWindow(): void {
   // Create the browser window.
@@ -14,8 +17,8 @@ function createWindow(): void {
     webPreferences: {
       preload: join(__dirname, '../preload/index.js'),
       sandbox: false
-    },
-    titleBarStyle: 'hidden'
+    }
+    // titleBarStyle: 'hidden'
   })
 
   mainWindow.on('ready-to-show', () => {
@@ -73,5 +76,22 @@ app.on('window-all-closed', () => {
   }
 })
 
-// In this file you can include the rest of your app's specific main process
-// code. You can also put them in separate files and require them here.
+const store = new Store<FolderSchema>()
+
+ipcMain.handle('folderPath:get', async () => {
+  return store.get('folders', [])
+})
+
+ipcMain.handle('folderPath:add', async (_, folderPath: string) => {
+  const exsisting = store.get('folders', [])
+
+  const isDuplicate = exsisting.some((f) => f.folderPath === folderPath)
+  if (isDuplicate) return
+
+  const newFolder: FolderPath = {
+    id: uuidv4(),
+    customName: folderPath.split('/').pop() || '',
+    folderPath
+  }
+  store.set('folders', [...exsisting, newFolder])
+})

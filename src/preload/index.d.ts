@@ -5,6 +5,8 @@ declare global {
     electron: ElectronAPI
     api: {
       openFolderDialog: () => Promise<string | null>
+      getFolderPaths: () => Promise<FolderPath[]>
+      addFolderPath: (folderPath: string) => Promise<void>
     }
   }
 }

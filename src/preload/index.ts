@@ -2,7 +2,9 @@ import { contextBridge, ipcRenderer } from 'electron'
 import { electronAPI } from '@electron-toolkit/preload'
 
 const api = {
-  openFolderDialog: () => ipcRenderer.invoke('dialog:openFolder')
+  openFolderDialog: () => ipcRenderer.invoke('dialog:openFolder'),
+  getFolderPaths: () => ipcRenderer.invoke('folderPath:get'),
+  addFolderPath: (folderPath: string) => ipcRenderer.invoke('folderPath:add', folderPath)
 }
 
 if (process.contextIsolated) {

@@ -1,6 +1,5 @@
 import openFolderDialog from '../utils/dialog'
 import Button from './Button'
-import { FaRegFolderOpen } from 'react-icons/fa6'
 
 function OpenDialog(): React.ReactElement {
   return (
@@ -8,9 +7,11 @@ function OpenDialog(): React.ReactElement {
       onClick={async () => {
         const folderPath = await openFolderDialog()
         alert(folderPath)
+        if (folderPath === null) return
+        await window.api.addFolderPath(folderPath)
       }}
     >
-      <FaRegFolderOpen />
+      Add folder paths
     </Button>
   )
 }
