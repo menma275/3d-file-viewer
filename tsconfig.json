@@ -1,4 +1,9 @@
+/// <reference types="@react-three/fiber" />
 {
   "files": [],
-  "references": [{ "path": "./tsconfig.node.json" }, { "path": "./tsconfig.web.json" }]
+  "references": [{ "path": "./tsconfig.node.json" }, { "path": "./tsconfig.web.json" }],
+  "compilerOptions": {
+    "jsx": "react-jsx",
+    "types": ["@react-three/fiber"]
+  }
 }

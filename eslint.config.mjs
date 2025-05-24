@@ -20,9 +20,11 @@ export default tseslint.config(
     files: ['**/*.{ts,tsx}'],
     plugins: {
       'react-hooks': eslintPluginReactHooks,
-      'react-refresh': eslintPluginReactRefresh
+      'react-refresh': eslintPluginReactRefresh,
+      '@react-three': ReactThree
     },
     rules: {
+      'react/no-unknown-property': ['error', { ignore: ['css', 'args', 'wireframe', 'JSX'] }],
       ...eslintPluginReactHooks.configs.recommended.rules,
       ...eslintPluginReactRefresh.configs.vite.rules
     }

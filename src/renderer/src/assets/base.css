@@ -7,16 +7,15 @@
   --color-bg: #252525;
   --color-mg: #2f2f2f;
   --color-bdr: #555;
-  /*--color-accent: #497d00;*/
   --color-accent: #848c42;
 
   /*light*/
   /*--color-primary: #333;*/
   /*--color-secondary: #aaa;*/
   /*--color-bg: #eee;*/
-  /*--color-mg: #ccc;*/
+  /*--color-mg: #e5e5e5;*/
+  /*--color-bdr: #fff;*/
   /*--color-accent: #848c42;*/
-  /*--color-borderColor: #333;*/
 }
 
 :root {

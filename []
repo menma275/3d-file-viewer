@@ -2,7 +2,6 @@ import * as THREE from 'three'
 import { useMemo } from 'react'
 import { Canvas } from '@react-three/fiber'
 import { OrbitControls } from '@react-three/drei'
-import { EffectComposer, DepthOfField, Vignette } from '@react-three/postprocessing'
 
 function createTextTexture(text: string): THREE.Texture {
   const canvas = document.createElement('canvas')
@@ -17,12 +16,10 @@ function createTextTexture(text: string): THREE.Texture {
   context.fillRect(0, 0, canvas.width, canvas.height)
 
   context.fillStyle = '#000000'
-  context.font = '32px sans-serif'
-  context.textAlign = 'left' //center
-  context.textBaseline = 'top' //middle
-  const textX = canvas.width / 7.5
-  const textY = canvas.height / 7.5
-  context.fillText(text, textX, textY)
+  context.font = '48px sans-serif'
+  context.textAlign = 'center'
+  context.textBaseline = 'middle'
+  context.fillText(text, canvas.width / 2, canvas.height / 2)
 
   return new THREE.CanvasTexture(canvas)
 }
@@ -33,14 +30,14 @@ function PlaneWithTextTexture(): React.ReactElement {
   return (
     <mesh>
       <planeGeometry args={[1, 1]} />
-      <meshBasicMaterial side={THREE.DoubleSide} map={texture} />
+      <meshBasicMaterial map={texture} />
     </mesh>
   )
 }
-
-function Scene(): React.ReactElement {
+function MainCanvas(): React.ReactElement {
   return (
-    <>
+    <Canvas>
+      <PlaneWithTextTexture />
       <OrbitControls
         enableZoom={true}
         enablePan={true}
@@ -50,19 +47,6 @@ function Scene(): React.ReactElement {
           RIGHT: 2 // Pan OR rotate — we’ll customize below
         }}
       />
-      <PlaneWithTextTexture />
-      <EffectComposer>
-        {/* <DepthOfField focusDistance={0} focalLength={0.05} bokehScale={5} height={480} /> */}
-        <Vignette eskil={false} offset={0.05} darkness={0.65} />
-      </EffectComposer>
-    </>
-  )
-}
-function MainCanvas(): React.ReactElement {
-  return (
-    <Canvas camera={{ position: [0, 0, 5], fov: 100 }}>
-      <color attach="background" args={['#252525']} />
-      <Scene />
     </Canvas>
   )
 }
