@@ -2,6 +2,8 @@ import MainCanvas from './components/Canvas'
 import Button from './components/Button'
 import OpenDialog from './components/OpenDialog'
 import ShowFolderPaths from './components/ShowFolderPaths'
+import LoadData from './components/LoadData'
+import Analyze from './components/Analyze'
 
 import { FaRegBell } from 'react-icons/fa6'
 
@@ -27,6 +29,8 @@ function App(): React.ReactElement {
           </Button>
           <OpenDialog />
           <ShowFolderPaths />
+          <LoadData />
+          <Analyze />
         </div>
       </div>
     </div>
