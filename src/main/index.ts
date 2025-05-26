@@ -4,7 +4,9 @@ import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import icon from '../../resources/icon.png?asset'
 import { v4 as uuidv4 } from 'uuid'
 import Store from 'electron-store'
+import ollama from 'ollama'
 import type { FolderPath, FolderSchema } from '../types/index'
+import { readFile, readdir, stat } from 'node:fs/promises'
 
 function createWindow(): void {
   // Create the browser window.
@@ -95,4 +97,38 @@ ipcMain.handle('folderPath:add', async (_, folderPath: string) => {
     folderPath
   }
   store.set('folders', [...exsisting, newFolder])
+})
+
+ipcMain.handle('ollama:embed', async (_, prompt: string) => {
+  const response = await ollama.embeddings({
+    model: 'nomic-embed-text',
+    prompt
+  })
+  return response
+})
+
+ipcMain.handle('readFile', async (_, filePath) => {
+  return await readFile(filePath, 'utf-8')
+})
+
+ipcMain.handle('fileStat', async (_event, filePath) => {
+  const fileStat = await stat(filePath);
+  return {
+    birthtime: fileStat.birthtime.toISOString(),
+    mtime: fileStat.mtime.toISOString()
+  };
+});
+
+ipcMain.handle('readDir', async (_, dirPath) => {
+  return await readdir(dirPath)
+})
+
+ipcMain.handle('fileDatas:get', async () => {
+  return store.get('fileDatas', [])
+})
+
+ipcMain.handle('fileDatas:add', async (_, newFileDataList) => {
+  const exsistingFile = store.get('fileDatas', [])
+  const merged = [...exsistingFile, ...newFileDataList]
+  store.set('fileDatas', merged)
 })
