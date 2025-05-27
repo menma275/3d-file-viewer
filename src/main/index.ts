@@ -5,7 +5,7 @@ import icon from '../../resources/icon.png?asset'
 import { v4 as uuidv4 } from 'uuid'
 import Store from 'electron-store'
 import ollama from 'ollama'
-import type { FolderPath, FolderSchema } from '../types/index'
+import type { FolderPath, FolderSchema, FileData, FileSchema } from '../types/index'
 import { readFile, readdir, stat } from 'node:fs/promises'
 
 function createWindow(): void {
@@ -79,14 +79,15 @@ app.on('window-all-closed', () => {
   }
 })
 
-const store = new Store<FolderSchema>()
+// handle folder paths -----------------
+const folderPathStore = new Store<FolderSchema>()
 
 ipcMain.handle('folderPath:get', async () => {
-  return store.get('folders', [])
+  return folderPathStore.get('folders', [])
 })
 
 ipcMain.handle('folderPath:add', async (_, folderPath: string) => {
-  const exsisting = store.get('folders', [])
+  const exsisting = storeFolderPaths.get('folders', [])
 
   const isDuplicate = exsisting.some((f) => f.folderPath === folderPath)
   if (isDuplicate) return
@@ -96,8 +97,11 @@ ipcMain.handle('folderPath:add', async (_, folderPath: string) => {
     customName: folderPath.split('/').pop() || '',
     folderPath
   }
-  store.set('folders', [...exsisting, newFolder])
+  folderPathStore.set('folders', [...exsisting, newFolder])
 })
+
+// handle file datas -----------------
+const fileDataStore = new Store<FileSchema>()
 
 ipcMain.handle('ollama:embed', async (_, prompt: string) => {
   const response = await ollama.embeddings({
@@ -112,23 +116,23 @@ ipcMain.handle('readFile', async (_, filePath) => {
 })
 
 ipcMain.handle('fileStat', async (_event, filePath) => {
-  const fileStat = await stat(filePath);
+  const fileStat = await stat(filePath)
   return {
     birthtime: fileStat.birthtime.toISOString(),
     mtime: fileStat.mtime.toISOString()
-  };
-});
+  }
+})
 
 ipcMain.handle('readDir', async (_, dirPath) => {
   return await readdir(dirPath)
 })
 
 ipcMain.handle('fileDatas:get', async () => {
-  return store.get('fileDatas', [])
+  return fileDataStore.get('fileDatas', [])
 })
 
 ipcMain.handle('fileDatas:add', async (_, newFileDataList) => {
   const exsistingFile = store.get('fileDatas', [])
   const merged = [...exsistingFile, ...newFileDataList]
-  store.set('fileDatas', merged)
+  fileDataStore.set('fileDatas', merged)
 })

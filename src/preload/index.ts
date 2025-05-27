@@ -8,7 +8,7 @@ const api = {
   embedding: (prompt: string) => ipcRenderer.invoke('ollama:embed', prompt),
   readFile: (filePath: string) => ipcRenderer.invoke('readFile', filePath),
   readDir: (dirPath: string) => ipcRenderer.invoke('readDir', dirPath),
-  statFile: (filePath: string) => ipcRenderer.invoke('fileStat',filePath),
+  statFile: (filePath: string) => ipcRenderer.invoke('fileStat', filePath),
   getFileDatas: () => ipcRenderer.invoke('fileDatas:get'),
   addFileDatas: (newData: string) => ipcRenderer.invoke('fileDatas:add', newData)
 }
