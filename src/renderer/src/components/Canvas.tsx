@@ -1,8 +1,9 @@
 import * as THREE from 'three'
-import { useMemo } from 'react'
+import { useMemo, useEffect, useState } from 'react'
 import { Canvas } from '@react-three/fiber'
 import { OrbitControls } from '@react-three/drei'
 import { EffectComposer, DepthOfField, Vignette } from '@react-three/postprocessing'
+import type { FileData, Vectors } from '../../../types/index'
 
 function createTextTexture(text: string): THREE.Texture {
   const canvas = document.createElement('canvas')
@@ -27,14 +28,45 @@ function createTextTexture(text: string): THREE.Texture {
   return new THREE.CanvasTexture(canvas)
 }
 
-function PlaneWithTextTexture(): React.ReactElement {
-  const texture = useMemo(() => createTextTexture('Hello Canvas!'), [])
+function PlaneWithTextTexture({ text, vectors }: { text: string, vectors: Vectors }): React.ReactElement {
+  const [vector, setVector] = useState<THREE.Vector3>(new THREE.Vector3())
+
+  const texture = useMemo(() => createTextTexture(text), [])
+
+
+  useEffect(() => {
+    const amp = 10;
+    // const x = vectors.embedding[0]
+    // const y = vectors.embedding[1]
+    // const z = vectors.embedding[2]
+    const x = Math.random() * amp - amp / 2
+    const y = Math.random() * amp - amp / 2
+    const z = Math.random() * amp - amp / 2
+    setVector(new THREE.Vector3(x, y, z))
+  }, [])
 
   return (
-    <mesh>
-      <planeGeometry args={[1, 1]} />
+    <mesh position={vector}>
+      <planeGeometry args={[1, 1, 1]} />
       <meshBasicMaterial side={THREE.DoubleSide} map={texture} />
     </mesh>
+  )
+}
+
+function Planes(): React.ReactElement {
+  const [datas, setDatas] = useState<FileData[]>([])
+
+  useEffect(() => {
+    window.api.getFileDatas().then(setDatas)
+  })
+
+
+  return (
+    <>
+      {datas.map((data: FileData) => (
+        <PlaneWithTextTexture text={data.fileContent} vectors={data.vectors} />
+      ))}
+    </>
   )
 }
 
@@ -50,7 +82,7 @@ function Scene(): React.ReactElement {
           RIGHT: 2 // Pan OR rotate — we’ll customize below
         }}
       />
-      <PlaneWithTextTexture />
+      <Planes />
       <EffectComposer>
         {/* <DepthOfField focusDistance={0} focalLength={0.05} bokehScale={5} height={480} /> */}
         <Vignette eskil={false} offset={0.05} darkness={0.65} />
