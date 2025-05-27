@@ -41,7 +41,7 @@ function PlaneWithTextTexture({ text, vectors }: { text: string, vectors: Vector
     // const z = vectors.embedding[2]
     const x = Math.random() * amp - amp / 2
     const y = Math.random() * amp - amp / 2
-    const z = Math.random() * amp - amp / 2
+    const z = -Math.random() * amp
     setVector(new THREE.Vector3(x, y, z))
   }, [])
 
@@ -64,7 +64,7 @@ function Planes(): React.ReactElement {
   return (
     <>
       {datas.map((data: FileData) => (
-        <PlaneWithTextTexture text={data.fileContent} vectors={data.vectors} />
+        <PlaneWithTextTexture key={data.id} text={data.fileContent} vectors={data.vectors} />
       ))}
     </>
   )

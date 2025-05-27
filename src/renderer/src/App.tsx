@@ -1,13 +1,17 @@
 import MainCanvas from './components/Canvas'
-import Button from './components/Button'
 import OpenDialog from './components/OpenDialog'
-import ShowFolderPaths from './components/ShowFolderPaths'
 import LoadData from './components/LoadData'
 import Analyze from './components/Analyze'
-
-import { FaRegBell } from 'react-icons/fa6'
+import { useState, useEffect } from 'react'
+import type { FolderPath } from '../../types/index'
 
 function App(): React.ReactElement {
+  const [folderPaths, setFolderPaths] = useState<FolderPath[]>([])
+
+  useEffect(() => {
+    window.api.getFolderPaths().then(setFolderPaths)
+  })
+
   return (
     <div className="w-full h-full overflow-hidden">
       {/* Main Area */}
@@ -19,16 +23,18 @@ function App(): React.ReactElement {
         className="absolute bottom-0 right-0 p-8 pt-12 w-fit h-fit flex flex-col
         justify-end items-center"
       >
-        <div className="flex flex-row gap-2 w-full justify-between">
-          <Button
-            onClick={() => {
-              alert('Hello!')
-            }}
-          >
-            <FaRegBell />
-          </Button>
+        <div className="flex flex-col gap-2 w-full justify-between bg-mg/10 backdrop-blur-lg  text-xs text-primary p-4 rounded-xl cursor-default">
+          <p>Folders</p>
+          <ul>
+            {folderPaths.map((folderPath: FolderPath) => (
+              <li className='flex flex-col items-start gap-1'>
+                <span className='text-sm'>{folderPath.customName}</span>
+                <span className='text-xs text-primary/50'>{folderPath.folderPath}</span>
+              </li>
+            ))}
+          </ul>
           <OpenDialog />
-          <ShowFolderPaths />
+          <p>Manage Files</p>
           <LoadData />
           <Analyze />
         </div>

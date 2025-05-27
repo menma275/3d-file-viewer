@@ -8,7 +8,7 @@ function Button({
   return (
     <button
       onClick={onClick}
-      className="flex flex-row justify-center items-center gap-1 bg-mg/10  backdrop-blur-lg text-accent font-bold px-4 py-2 rounded-xl border border-[0.5px] border-bdr text-xs hover:cursor-pointer"
+      className="flex flex-row justify-start items-center gap-1  text-xs px-3 py-2 bg-bg rounded-lg hover:bg-mg hover:border-mg hover:cursor-pointer duration-75 ease-in-out"
     >
       {children}
     </button>

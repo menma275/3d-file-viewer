@@ -11,7 +11,7 @@ function OpenDialog(): React.ReactElement {
         await window.api.addFolderPath(folderPath)
       }}
     >
-      Add folder paths
+      Add Folder
     </Button>
   )
 }
