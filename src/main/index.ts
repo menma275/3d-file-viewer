@@ -5,7 +5,7 @@ import icon from '../../resources/icon.png?asset'
 import { v4 as uuidv4 } from 'uuid'
 import Store from 'electron-store'
 import ollama from 'ollama'
-import type { FolderPath, FolderSchema, FileData, FileSchema } from '../types/index'
+import type { FolderPath, FolderSchema, FileSchema } from '../types/index'
 import { readFile, readdir, stat } from 'node:fs/promises'
 
 function createWindow(): void {
@@ -87,7 +87,7 @@ ipcMain.handle('folderPath:get', async () => {
 })
 
 ipcMain.handle('folderPath:add', async (_, folderPath: string) => {
-  const exsisting = storeFolderPaths.get('folders', [])
+  const exsisting = folderPathStore.get('folders', [])
 
   const isDuplicate = exsisting.some((f) => f.folderPath === folderPath)
   if (isDuplicate) return
@@ -132,7 +132,7 @@ ipcMain.handle('fileDatas:get', async () => {
 })
 
 ipcMain.handle('fileDatas:add', async (_, newFileDataList) => {
-  const exsistingFile = store.get('fileDatas', [])
+  const exsistingFile = fileDataStore.get('fileDatas', [])
   const merged = [...exsistingFile, ...newFileDataList]
   fileDataStore.set('fileDatas', merged)
 })
