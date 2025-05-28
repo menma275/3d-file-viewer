@@ -107,6 +107,7 @@ function Scene(): React.ReactElement {
     </>
   )
 }
+
 function MainCanvas(): React.ReactElement {
   return (
     <Canvas camera={{ position: [0, 0, 5], fov: 100 }}>

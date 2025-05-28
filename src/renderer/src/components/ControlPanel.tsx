@@ -43,9 +43,16 @@ function ControlPanel(): React.ReactElement {
   return (
     <div className="absolute bottom-0 right-0 p-2 h-dvh max-w-xs ">
       {isOpen && (
-        <div className="flex flex-col gap-2 pt-10 w-full h-full justify-between bg-mg/30 backdrop-blur-lg text-xs text-primary p-2 pt-3 border-[0.5px] border-bdr rounded-xl cursor-default overflow-y-auto">
+        <div className="flex flex-col gap-2 pt-10 w-full h-full justify-between bg-mg/30 backdrop-blur-md text-xs text-primary p-2 pt-3 border-[0.5px] border-bdr rounded-xl cursor-default overflow-x-hidden overflow-y-auto">
           <ChildPanel title="File Content">
-            <div className="h-full">{selectedFile?.fileContent}</div>
+            <div className="h-full flex flex-col gap-1">
+              <p className="text-secondary">
+                {selectedFile
+                  ? selectedFile.filePath.split('/').pop()
+                  : 'No File Selected : Click a file to see its content'}
+              </p>
+              {selectedFile && <p>{selectedFile.fileContent}</p>}
+            </div>
           </ChildPanel>
           <div className="flex flex-col gap-3">
             <ChildPanel title="Refrenced Folders">

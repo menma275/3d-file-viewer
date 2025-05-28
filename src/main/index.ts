@@ -136,3 +136,10 @@ ipcMain.handle('fileDatas:add', async (_, newFileDataList) => {
   const merged = [...exsistingFile, ...newFileDataList]
   fileDataStore.set('fileDatas', merged)
 })
+
+// handle axis datas ----------
+// const axisNameStore = new Store<VectorNames>()
+//
+// ipcMain.handle('axisName:get', async () => {
+//   return axisNameStore.get('axisNames')
+// })
