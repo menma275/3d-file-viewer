@@ -4,6 +4,8 @@ import { Canvas } from '@react-three/fiber'
 import { OrbitControls } from '@react-three/drei'
 import { EffectComposer, DepthOfField, Vignette } from '@react-three/postprocessing'
 import type { FileData, Vectors } from '../../../types/index'
+import { useAtom } from 'jotai'
+import { selectedFileIdAtom } from '../../../state/atoms'
 
 function createTextTexture(text: string): THREE.Texture {
   const canvas = document.createElement('canvas')
@@ -28,25 +30,36 @@ function createTextTexture(text: string): THREE.Texture {
   return new THREE.CanvasTexture(canvas)
 }
 
-function PlaneWithTextTexture({ text, vectors }: { text: string, vectors: Vectors }): React.ReactElement {
+function PlaneWithTextTexture({
+  id,
+  text,
+  vectors
+}: {
+  id: string
+  text: string
+  vectors: Vectors
+}): React.ReactElement {
   const [vector, setVector] = useState<THREE.Vector3>(new THREE.Vector3())
-
+  const [selectedFileId, setSelectedFileId] = useAtom(selectedFileIdAtom)
   const texture = useMemo(() => createTextTexture(text), [])
 
-
   useEffect(() => {
-    const amp = 10;
-    // const x = vectors.embedding[0]
-    // const y = vectors.embedding[1]
-    // const z = vectors.embedding[2]
-    const x = Math.random() * amp - amp / 2
-    const y = Math.random() * amp - amp / 2
-    const z = -Math.random() * amp
+    const amp = 10
+    let x = vectors.embedding[0]
+    let y = vectors.embedding[1]
+    let z = vectors.embedding[2]
+    x = Math.random() * amp - amp / 2
+    y = Math.random() * amp - amp / 2
+    z = -Math.random() * amp
     setVector(new THREE.Vector3(x, y, z))
   }, [])
 
+  const handleClick = (fileId: string): void => {
+    setSelectedFileId(fileId)
+  }
+
   return (
-    <mesh position={vector}>
+    <mesh position={vector} onClick={() => handleClick(id)}>
       <planeGeometry args={[1, 1, 1]} />
       <meshBasicMaterial side={THREE.DoubleSide} map={texture} />
     </mesh>
@@ -60,11 +73,15 @@ function Planes(): React.ReactElement {
     window.api.getFileDatas().then(setDatas)
   })
 
-
   return (
     <>
       {datas.map((data: FileData) => (
-        <PlaneWithTextTexture key={data.id} text={data.fileContent} vectors={data.vectors} />
+        <PlaneWithTextTexture
+          key={data.id}
+          id={data.id}
+          text={data.fileContent}
+          vectors={data.vectors}
+        />
       ))}
     </>
   )
@@ -93,7 +110,8 @@ function Scene(): React.ReactElement {
 function MainCanvas(): React.ReactElement {
   return (
     <Canvas camera={{ position: [0, 0, 5], fov: 100 }}>
-      <color attach="background" args={['#252525']} />
+      <color attach="background" args={['#eee']} />
+      {/* <color attach="background" args={['#252525']} /> */}
       <Scene />
     </Canvas>
   )

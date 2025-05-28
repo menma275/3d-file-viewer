@@ -10,12 +10,12 @@
   --color-accent: #848c42;
 
   /*light*/
-  /*--color-primary: #333;*/
-  /*--color-secondary: #aaa;*/
-  /*--color-bg: #eee;*/
-  /*--color-mg: #e5e5e5;*/
-  /*--color-bdr: #fff;*/
-  /*--color-accent: #848c42;*/
+  --color-primary: #333;
+  --color-secondary: #aaa;
+  --color-bg: #eee;
+  --color-mg: #e5e5e5;
+  --color-bdr: #fff;
+  --color-accent: #97BB5D;
 }
 
 :root {

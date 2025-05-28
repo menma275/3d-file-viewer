@@ -21,7 +21,6 @@ export default tseslint.config(
     plugins: {
       'react-hooks': eslintPluginReactHooks,
       'react-refresh': eslintPluginReactRefresh,
-      '@react-three': ReactThree
     },
     rules: {
       'react/no-unknown-property': ['error', { ignore: ['css', 'args', 'wireframe', 'JSX'] }],
