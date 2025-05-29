@@ -143,3 +143,9 @@ ipcMain.handle('fileDatas:add', async (_, newFileDataList) => {
 // ipcMain.handle('axisName:get', async () => {
 //   return axisNameStore.get('axisNames')
 // })
+
+// handle open file in finder/explorer ----------
+ipcMain.handle('showItemInFolder', async (_, filePath: string) => {
+  // shell.openPath(filePath)
+  shell.showItemInFolder(filePath)
+})

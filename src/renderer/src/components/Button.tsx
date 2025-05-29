@@ -10,7 +10,7 @@ function Button({
   return (
     <button
       onClick={onClick}
-      className={`flex flex-row ${isFull ? 'w-full' : 'w-fit'}  justify-center items-center gap-1  text-xs px-3 py-2 bg-mg rounded-lg hover:bg-accent hover:border-mg hover:cursor-pointer duration-300 ease-in-out`}
+      className={`flex flex-row ${isFull ? 'w-full' : 'w-fit'}  justify-center items-center gap-1  text-xs px-3 py-2 bg-mg rounded-lg hover:bg-accent hover:text-bg hover:border-mg hover:cursor-pointer duration-300 ease-in-out`}
     >
       {children}
     </button>

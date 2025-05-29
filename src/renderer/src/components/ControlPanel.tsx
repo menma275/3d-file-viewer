@@ -2,6 +2,7 @@ import OpenDialog from './OpenDialog'
 import LoadData from './LoadData'
 import Analyze from './Analyze'
 import Button from './Button'
+import ShowItemInFolder from './ShowItemInFolder'
 import { BsLayoutSidebarReverse } from 'react-icons/bs'
 import type { FolderPath } from '../../../types/index'
 import { useState, useEffect } from 'react'
@@ -51,7 +52,12 @@ function ControlPanel(): React.ReactElement {
                   ? selectedFile.filePath.split('/').pop()
                   : 'No File Selected : Click a file to see its content'}
               </p>
-              {selectedFile && <p>{selectedFile.fileContent}</p>}
+              {selectedFile && (
+                <>
+                  <p>{selectedFile.fileContent}</p>
+                  <ShowItemInFolder filePath={selectedFile?.filePath} />
+                </>
+              )}
             </div>
           </ChildPanel>
           <div className="flex flex-col gap-3">

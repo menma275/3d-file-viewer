@@ -13,6 +13,7 @@ declare global {
       statFile: (filePath: string) => Promise<fs.Stats>
       getFileDatas: () => Promise<FileData[]>
       addFileDatas: (newData: string) => Promise<void>
+      showItemInFolder: (filePath: string) => Promise<void>
     }
   }
 }
