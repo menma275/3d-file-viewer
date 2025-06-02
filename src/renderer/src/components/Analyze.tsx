@@ -1,5 +1,6 @@
 import dataAnalyze from '../utils/diffAnalyzer';
 import Button from './Button';
+import type { FileData } from '../../../types/index'
 
 function OpenDialog(): React.ReactElement {
     return (
@@ -10,8 +11,10 @@ function OpenDialog(): React.ReactElement {
                 const allFiles: string[] = [];
                 for (const folderPath of folderPaths) {
                     const fileNames = await window.api.readDir(folderPath);
-                    for (const name of fileNames) {
-                        allFiles.push(`${folderPath}/${name}`);
+                    if(fileNames){
+                        for (const name of fileNames) {
+                            allFiles.push(`${folderPath}/${name}`);
+                        }
                     }
                 }
 
@@ -25,7 +28,7 @@ function OpenDialog(): React.ReactElement {
 
                 const analyzedDatas = await window.api.getFileDatas();
 
-                const newData = await dataAnalyze(analyzedDatas, folderPaths, allFiles, fileContents, stats);
+                const newData:FileData[] = await dataAnalyze(analyzedDatas, folderPaths, allFiles, fileContents, stats);
                 
                 if (newData === null) return;
 
