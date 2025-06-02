@@ -48,9 +48,12 @@ function PlaneWithTextTexture({
     let x = vectors.embedding[0]
     let y = vectors.embedding[1]
     let z = vectors.embedding[2]
-    x = Math.random() * amp - amp / 2
-    y = Math.random() * amp - amp / 2
-    z = -Math.random() * amp
+    x = x * amp - amp / 2
+    y = y * amp - amp / 2
+    z = -z * amp
+    // x = Math.random() * amp - amp / 2
+    // y = Math.random() * amp - amp / 2
+    // z = -Math.random() * amp
     setVector(new THREE.Vector3(x, y, z))
   }, [])
 
