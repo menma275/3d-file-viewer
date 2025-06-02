@@ -14,6 +14,8 @@ declare global {
       getFileDatas: () => Promise<FileData[]>
       addFileDatas: (newData: FileData[]) => Promise<void>
       showItemInFolder: (filePath: string) => Promise<void>
+      getCustomVectorName: () => Promise<CustomVectorSchema[]>
+      addCustomVectorName: (customName: string) => Promise<void>
     }
   }
 }

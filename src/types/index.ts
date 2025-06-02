@@ -21,7 +21,8 @@ export type CustomVectorValues = {
 export type Vectors = {
   embedding: number[]
   embeddingRaw: number[]
-  customVectorValues: CustomVectorValues
+  customVectorValues: CustomVectorValue[]
+  // customVectorValues: CustomVectorValues
 }
 
 // export type Vectors = {

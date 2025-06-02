@@ -5,7 +5,7 @@ import icon from '../../resources/icon.png?asset'
 import { v4 as uuidv4 } from 'uuid'
 import Store from 'electron-store'
 import { OllamaEmbeddings } from '@langchain/ollama'
-import type { FolderPath, FolderSchema, FileSchema } from '../types/index'
+import type { FolderPath, FolderSchema, FileSchema, CustomVectorSchema } from '../types/index'
 import { readFile, readdir, stat } from 'node:fs/promises'
 
 //let ollamaProcess: ReturnType<typeof spawn> | null = null
@@ -140,11 +140,23 @@ ipcMain.handle('fileDatas:add', async (_, newFileDataList) => {
 })
 
 // handle axis datas ----------
-// const axisNameStore = new Store<VectorNames>()
-//
-// ipcMain.handle('axisName:get', async () => {
-//   return axisNameStore.get('axisNames')
-// })
+const customVectorSchemaStore = new Store<CustomVectorSchema[]>()
+
+ipcMain.handle('customVectorStore:get', async () => {
+  return customVectorSchemaStore.get('customVectors')
+})
+
+ipcMain.handle('customVectorStore:add', async (_, customVectorName: string) => {
+  const exsisting = customVectorSchemaStore.get('customVectors', [])
+  const customVector: CustomVectorSchema = {
+    id: uuidv4(),
+    name: customVectorName
+  }
+  const isDuplicate = exsisting.some((v: CustomVectorSchema) => v.name === customVectorName)
+  if (isDuplicate) return
+
+  return customVectorSchemaStore.set('customVectors', [...exsisting, customVector])
+})
 
 // handle open file in finder/explorer ----------
 ipcMain.handle('showItemInFolder', async (_, filePath: string) => {

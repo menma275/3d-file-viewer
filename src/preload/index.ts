@@ -11,7 +11,10 @@ const api = {
   statFile: (filePath: string) => ipcRenderer.invoke('fileStat', filePath),
   getFileDatas: () => ipcRenderer.invoke('fileDatas:get'),
   addFileDatas: (newData: string) => ipcRenderer.invoke('fileDatas:add', newData),
-  showItemInFolder: (filePath: string) => ipcRenderer.invoke('showItemInFolder', filePath)
+  showItemInFolder: (filePath: string) => ipcRenderer.invoke('showItemInFolder', filePath),
+  getCustomVectorName: () => ipcRenderer.invoke('customVectorStore:get'),
+  addCustomVectorName: (customName: string) =>
+    ipcRenderer.invoke('customVectorStore:add', customName)
 }
 
 if (process.contextIsolated) {
