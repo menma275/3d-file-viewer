@@ -57,13 +57,11 @@ const dataAnalyze = async (
           vectors: {
             embedding: [0.1, 0.2, 0.3], // 失敗時の仮データ
             embeddingRaw: [0.1, 0.2, 0.3], // 失敗時の仮データ
-            customVectorValues: {
-              values: [
-                { schemaId: 'parameter01', value: 0.1 },
-                { schemaId: 'parameter02', value: 0.2 },
-                { schemaId: 'parameter03', value: 0.2 }
-              ]
-            }
+            customVectorValues: [
+              { schemaId: 'parameter01', value: 0.1 },
+              { schemaId: 'parameter02', value: 0.2 },
+              { schemaId: 'parameter03', value: 0.2 }
+            ]
           }
         }
         newFileDataList.push(newFileData)
@@ -76,4 +74,3 @@ const dataAnalyze = async (
 }
 
 export default dataAnalyze
-

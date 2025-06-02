@@ -9,7 +9,7 @@ import { useState, useEffect } from 'react'
 import { useAtom } from 'jotai'
 import { selectedFileIdAtom } from '../../../state/atoms'
 import searchFile from '../utils/searchFile'
-import type { FileData } from '../../../types/index'
+import type { FileData, CustomVectorSchema } from '../../../types/index'
 
 function ChildPanel({
   title,
@@ -31,15 +31,25 @@ function ControlPanel(): React.ReactElement {
   const [folderPaths, setFolderPaths] = useState<FolderPath[]>([])
   const [selectedFile, setSelectedFile] = useState<FileData | null>(null)
   const [selectedFileId] = useAtom(selectedFileIdAtom)
+  const [vectorName, setVectorName] = useState<string>('')
+  const [customVectors, setCustomVectors] = useState<CustomVectorSchema[]>([])
 
   useEffect(() => {
     window.api.getFolderPaths().then(setFolderPaths)
   }, [])
 
   useEffect(() => {
+    window.api.getCustomVectorName().then(setCustomVectors)
+  }, [])
+
+  useEffect(() => {
     if (!selectedFileId) return
     searchFile({ id: selectedFileId }).then(setSelectedFile)
   }, [selectedFileId])
+
+  const setCustomVectorName = (): void => {
+    window.api.addCustomVectorName(vectorName)
+  }
 
   return (
     <div className="absolute bottom-0 right-0 p-2 h-dvh max-w-xs ">
@@ -77,6 +87,24 @@ function ControlPanel(): React.ReactElement {
                 <LoadData />
                 <Analyze />
               </div>
+            </ChildPanel>
+            <ChildPanel title="Existing Vectors">
+              {customVectors && (
+                <ul className="flex flex-col items-start gap-1 w-full box-border truncate">
+                  {customVectors.map((vector: CustomVectorSchema) => (
+                    <li key={vector.id} className="flex flex-col items-start gap-1">
+                      <span className="text-sm">{vector.name}</span>
+                    </li>
+                  ))}
+                </ul>
+              )}
+              <input
+                type="text"
+                value={vectorName}
+                onChange={(e) => setVectorName(e.target.value)}
+                placeholder="Enter Custom Name"
+              />
+              <Button onClick={() => setCustomVectorName()}>Add Custom Name</Button>
             </ChildPanel>
           </div>
         </div>
