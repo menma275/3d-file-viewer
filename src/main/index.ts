@@ -4,9 +4,11 @@ import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import icon from '../../resources/icon.png?asset'
 import { v4 as uuidv4 } from 'uuid'
 import Store from 'electron-store'
-import ollama from 'ollama'
+import { OllamaEmbeddings } from '@langchain/ollama'
 import type { FolderPath, FolderSchema, FileSchema, CustomVectorSchema } from '../types/index'
 import { readFile, readdir, stat } from 'node:fs/promises'
+
+//let ollamaProcess: ReturnType<typeof spawn> | null = null
 
 function createWindow(): void {
   // Create the browser window.
@@ -46,6 +48,7 @@ function createWindow(): void {
 // initialization and is ready to create browser windows.
 // Some APIs can only be used after this event occurs.
 app.whenReady().then(() => {
+
   electronApp.setAppUserModelId('com.electron')
 
   app.on('browser-window-created', (_, window) => {
@@ -70,9 +73,6 @@ app.whenReady().then(() => {
   })
 })
 
-// Quit when all windows are closed, except on macOS. There, it's common
-// for applications and their menu bar to stay active until the user quits
-// explicitly with Cmd + Q.
 app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') {
     app.quit()
@@ -102,13 +102,17 @@ ipcMain.handle('folderPath:add', async (_, folderPath: string) => {
 
 // handle file datas -----------------
 const fileDataStore = new Store<FileSchema>()
-
-ipcMain.handle('ollama:embed', async (_, prompt: string) => {
-  const response = await ollama.embeddings({
-    model: 'nomic-embed-text',
-    prompt
-  })
-  return response
+ipcMain.handle('ollama:embed', async (_, prompt: string): Promise<number[]> => {
+  try {
+    const embeddings = new OllamaEmbeddings({
+      model: 'nomic-embed-text'
+    })
+    const result = await embeddings.embedQuery(prompt)
+    return result
+  } catch (err) {
+    console.error('埋め込み取得中にエラー:', err)
+    return []
+  }
 })
 
 ipcMain.handle('readFile', async (_, filePath) => {
@@ -132,9 +136,7 @@ ipcMain.handle('fileDatas:get', async () => {
 })
 
 ipcMain.handle('fileDatas:add', async (_, newFileDataList) => {
-  const exsistingFile = fileDataStore.get('fileDatas', [])
-  const merged = [...exsistingFile, ...newFileDataList]
-  fileDataStore.set('fileDatas', merged)
+  fileDataStore.set('fileDatas', newFileDataList)
 })
 
 // handle axis datas ----------
