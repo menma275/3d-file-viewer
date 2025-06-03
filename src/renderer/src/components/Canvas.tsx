@@ -7,6 +7,22 @@ import type { FileData, Vectors } from '../../../types/index'
 import { useAtom } from 'jotai'
 import { selectedFileIdAtom } from '../../../state/atoms'
 
+function drawRoundedRect(ctx: CanvasRenderingContext2D, x: number, y: number, width: number, height: number, radius: number) {
+  ctx.beginPath()
+  ctx.moveTo(x + radius, y)
+  ctx.lineTo(x + width - radius, y)
+  ctx.quadraticCurveTo(x + width, y, x + width, y + radius)
+  ctx.lineTo(x + width, y + height - radius)
+  ctx.quadraticCurveTo(x + width, y + height, x + width - radius, y + height)
+  ctx.lineTo(x + radius, y + height)
+  ctx.quadraticCurveTo(x, y + height, x, y + height - radius)
+  ctx.lineTo(x, y + radius)
+  ctx.quadraticCurveTo(x, y, x + radius, y)
+  ctx.closePath()
+  ctx.clip() // apply the mask
+}
+
+
 function createTextTexture(text: string): THREE.Texture {
   const canvas = document.createElement('canvas')
   const context = canvas.getContext('2d')
@@ -16,16 +32,39 @@ function createTextTexture(text: string): THREE.Texture {
   canvas.width = 512
   canvas.height = 512
 
-  context.fillStyle = '#ffffff'
+  drawRoundedRect(context, 0, 0, canvas.width, canvas.height, 32)
+  context.fillStyle = '#fff'
   context.fillRect(0, 0, canvas.width, canvas.height)
+  // context.roundRect(0, 0, canvas.width, canvas.height, 32)
 
   context.fillStyle = '#000000'
   context.font = '32px sans-serif'
   context.textAlign = 'left' //center
   context.textBaseline = 'top' //middle
-  const textX = canvas.width / 7.5
-  const textY = canvas.height / 7.5
-  context.fillText(text, textX, textY)
+  const textX = 64
+  const textY = 64
+  const maxWidth = canvas.width - textX * 2
+  const lineHeight = 40
+
+  let line = ''
+  let y = textY
+
+  for (let i = 0; i < text.length; i++) {
+    const testLine = line + text[i]
+    const { width: testWidth } = context.measureText(testLine)
+
+    if (testWidth > maxWidth && i > 0) {
+      context.fillText(line, textX, y)
+      line = text[i]
+      y += lineHeight
+    } else {
+      line = testLine
+    }
+
+    if (y > canvas.height - textY * 2) break
+  }
+
+  context.fillText(line, textX, y)
 
   return new THREE.CanvasTexture(canvas)
 }
@@ -48,12 +87,9 @@ function PlaneWithTextTexture({
     let x = vectors.embedding[0]
     let y = vectors.embedding[1]
     let z = vectors.embedding[2]
-    x = x * amp - amp / 2
-    y = y * amp - amp / 2
-    z = -z * amp
-    // x = Math.random() * amp - amp / 2
-    // y = Math.random() * amp - amp / 2
-    // z = -Math.random() * amp
+    x = x * amp
+    y = y * amp
+    z = z * amp
     setVector(new THREE.Vector3(x, y, z))
   }, [])
 
@@ -64,7 +100,7 @@ function PlaneWithTextTexture({
   return (
     <mesh position={vector} onClick={() => handleClick(id)}>
       <planeGeometry args={[1, 1, 1]} />
-      <meshBasicMaterial side={THREE.DoubleSide} map={texture} />
+      <meshBasicMaterial side={THREE.DoubleSide} map={texture} transparent={true} />
     </mesh>
   )
 }
