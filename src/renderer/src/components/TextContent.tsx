@@ -15,12 +15,15 @@ function TextContent(): React.ReactElement {
   }, [selectedFileId])
 
   return (
-    <div className="absolute bottom-0 left-0 p-14 h-dvh max-w-xl ">
+    <div className="absolute top-0 left-0 p-14 h-fit max-w-md ">
       <div className="h-full flex flex-col gap-1">
         {selectedFile && (
           <>
-            <ShowItemInFolder title={selectedFile.filePath.split('/').pop()} filePath={selectedFile?.filePath} />
-            <p className='ml-3 text-base text-bg'>{selectedFile.fileContent}</p>
+            <ShowItemInFolder
+              title={selectedFile.filePath.split('/').pop()}
+              filePath={selectedFile?.filePath}
+            />
+            <p className="ml-3 text-sm text-bg">{selectedFile.fileContent}</p>
           </>
         )}
       </div>

@@ -47,7 +47,6 @@ function ControlPanel(): React.ReactElement {
     window.api.getCustomVectorName().then(setCustomVectors)
   }, [])
 
-
   const setCustomVectorName = (): void => {
     window.api.addCustomVectorName(vectorName)
   }
@@ -111,8 +110,8 @@ function ControlPanel(): React.ReactElement {
         </div>
       )}
       <div className="fixed top-4 right-4">
-        <Button isFull={false} onClick={() => setIsOpen(!isOpen)}>
-          <BsLayoutSidebarReverse className="text-sm" />
+        <Button isFill={false} isFull={false} onClick={() => setIsOpen(!isOpen)}>
+          <BsLayoutSidebarReverse className="text-sm text-primary" />
         </Button>
       </div>
     </div>

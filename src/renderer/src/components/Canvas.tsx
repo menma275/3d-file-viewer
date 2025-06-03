@@ -3,11 +3,18 @@ import { useMemo, useEffect, useState } from 'react'
 import { Canvas } from '@react-three/fiber'
 import { OrbitControls } from '@react-three/drei'
 import { EffectComposer, DepthOfField, Vignette } from '@react-three/postprocessing'
-import type { FileData, Vectors } from '../../../types/index'
+import type { FileData, Vectors, CustomVectorValue } from '../../../types/index'
 import { useAtom } from 'jotai'
-import { selectedFileIdAtom } from '../../../state/atoms'
+import { selectedFileIdAtom, axisXAtom, axisYAtom, axisZAtom } from '../../../state/atoms'
 
-function drawRoundedRect(ctx: CanvasRenderingContext2D, x: number, y: number, width: number, height: number, radius: number) {
+function drawRoundedRect(
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  width: number,
+  height: number,
+  radius: number
+): void {
   ctx.beginPath()
   ctx.moveTo(x + radius, y)
   ctx.lineTo(x + width - radius, y)
@@ -21,7 +28,6 @@ function drawRoundedRect(ctx: CanvasRenderingContext2D, x: number, y: number, wi
   ctx.closePath()
   ctx.clip() // apply the mask
 }
-
 
 function createTextTexture(text: string): THREE.Texture {
   const canvas = document.createElement('canvas')
@@ -80,20 +86,80 @@ function PlaneWithTextTexture({
   text: string
   vectors: Vectors
 }): React.ReactElement {
-  const [vector, setVector] = useState<THREE.Vector3>(new THREE.Vector3())
   const [selectedFileId, setSelectedFileId] = useAtom(selectedFileIdAtom)
-  const texture = useMemo(() => createTextTexture(text), [])
+  const texture = useMemo(() => createTextTexture(text), [text])
+  const [vector, setVector] = useState<THREE.Vector3>(new THREE.Vector3())
+
+  const [axisX] = useAtom(axisXAtom)
+  const [axisY] = useAtom(axisYAtom)
+  const [axisZ] = useAtom(axisZAtom)
+  const amp = 10
 
   useEffect(() => {
-    const amp = 10
     let x = vectors.embedding[0]
-    let y = vectors.embedding[1]
-    let z = vectors.embedding[2]
-    x = x * amp
-    y = y * amp
-    z = z * amp
-    setVector(new THREE.Vector3(x, y, z))
-  }, [])
+    switch (axisX) {
+      case 'ex':
+        x = vectors.embedding[0]
+        break
+      case 'ey':
+        x = vectors.embedding[1]
+        break
+      case 'ez':
+        x = vectors.embedding[2]
+        break
+      default:
+        x =
+          vectors?.customVectorValues?.find((v: CustomVectorValue) => v.schemaId === axisX)
+            ?.value || vectors.embedding[0]
+        break
+    }
+
+    setVector((prev) => new THREE.Vector3(x * amp, prev.y, prev.z))
+  }, [axisX, vectors])
+
+  useEffect(() => {
+    let y = vectors.embedding[0]
+    switch (axisY) {
+      case 'ex':
+        y = vectors.embedding[0]
+        break
+      case 'ey':
+        y = vectors.embedding[1]
+        break
+      case 'ez':
+        y = vectors.embedding[2]
+        break
+      default:
+        y =
+          vectors?.customVectorValues?.find((v: CustomVectorValue) => v.schemaId === axisY)
+            ?.value || vectors.embedding[0]
+        break
+    }
+
+    setVector((prev) => new THREE.Vector3(prev.x, y * amp, prev.z))
+  }, [axisY, vectors])
+
+  useEffect(() => {
+    let z = vectors.embedding[0]
+    switch (axisZ) {
+      case 'ex':
+        z = vectors.embedding[0]
+        break
+      case 'ey':
+        z = vectors.embedding[1]
+        break
+      case 'ez':
+        z = vectors.embedding[2]
+        break
+      default:
+        z =
+          vectors?.customVectorValues?.find((v: CustomVectorValue) => v.schemaId === axisZ)
+            ?.value || vectors.embedding[0]
+        break
+    }
+
+    setVector((prev) => new THREE.Vector3(prev.x, prev.y, z * amp))
+  }, [axisZ, vectors])
 
   const handleSelectFile = (fileId: string): void => {
     setSelectedFileId(fileId)

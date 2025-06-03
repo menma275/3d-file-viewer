@@ -1,36 +1,65 @@
-// import { useAtom } from 'jotai'
-// import { axisXAtom, axisYAtom, axisZAtom } from '../../../state/atoms'
+import { useAtom } from 'jotai'
+import { axisXAtom, axisYAtom, axisZAtom } from '../../../state/atoms'
+import { useState, useEffect } from 'react'
+import type { CustomVectorSchema } from '../../../types/index'
 
 function AxisControl(): React.ReactElement {
-  // const [axisX, setAxisX] = useAtom(axisXAtom)
-  // const [axisY, setAxisY] = useAtom(axisYAtom)
-  // const [axisZ, setAxisZ] = useAtom(axisZAtom)
+  const [axisX, setAxisX] = useAtom(axisXAtom)
+  const [axisY, setAxisY] = useAtom(axisYAtom)
+  const [axisZ, setAxisZ] = useAtom(axisZAtom)
+  const [axisList, setAxisList] = useState<string[]>(['ex', 'ey', 'ez'])
+  const [customAxisList, setCustomAxisList] = useState<CustomVectorSchema[]>([])
+
+  useEffect(() => {
+    window.api.getCustomVectorName().then(setCustomAxisList)
+  }, [])
+
+  useEffect(() => {
+    setAxisList((prevList) => [
+      ...new Set([...prevList, ...customAxisList.map((axis) => axis.name)])
+    ])
+  }, [customAxisList])
+
+  const handleAxisId = (name: string): string => {
+    if (['ex', 'ey', 'ez'].includes(name)) return name
+
+    const axis = customAxisList.find((axis) => axis.name === name)
+
+    if (axis?.id) return axis.id
+    else return ''
+  }
 
   return (
-    <div className="absolute bottom-0 left-0 p-15 h-fit w-fit">
+    <div className="absolute bottom-0 left-0 p-8 h-fit w-fit">
       <div className="flex flex-row gap-4 w-full h-full justify-between bg-mg/30 backdrop-blur-lg text-xs text-primary p-3 border-[0.5px] border-bdr rounded-xl cursor-default">
         <label>
           X
-          <select>
-            <option>Option 01</option>
-            <option>Option 02</option>
-            <option>Option 03</option>
+          <select onChange={(e) => setAxisX(handleAxisId(e.target.value))} value={axisX}>
+            {axisList.map((axis: string) => (
+              <option key={axis} value={axis}>
+                {axis}
+              </option>
+            ))}
           </select>
         </label>
         <label>
           Y
-          <select>
-            <option>Option 01</option>
-            <option>Option 02</option>
-            <option>Option 03</option>
+          <select onChange={(e) => setAxisY(handleAxisId(e.target.value))} value={axisY}>
+            {axisList.map((axis: string) => (
+              <option key={axis} value={axis}>
+                {axis}
+              </option>
+            ))}
           </select>
         </label>
         <label>
           Z
-          <select>
-            <option>Option 01</option>
-            <option>Option 02</option>
-            <option>Option 03</option>
+          <select onChange={(e) => setAxisZ(handleAxisId(e.target.value))} value={axisZ}>
+            {axisList.map((axis: string) => (
+              <option key={axis} value={axis}>
+                {axis}
+              </option>
+            ))}
           </select>
         </label>
       </div>
