@@ -34,8 +34,10 @@ function createTextTexture(text: string): THREE.Texture {
 
   drawRoundedRect(context, 0, 0, canvas.width, canvas.height, 32)
   context.fillStyle = '#fff'
+  context.strokeStyle = '#ccc'
+  context.lineWidth = 4
   context.fillRect(0, 0, canvas.width, canvas.height)
-  // context.roundRect(0, 0, canvas.width, canvas.height, 32)
+  context.stroke()
 
   context.fillStyle = '#000000'
   context.font = '32px sans-serif'
@@ -61,10 +63,10 @@ function createTextTexture(text: string): THREE.Texture {
       line = testLine
     }
 
-    if (y > canvas.height - textY * 2) break
+    if (y - lineHeight > canvas.height - textY * 2) break
   }
 
-  context.fillText(line, textX, y)
+  // context.fillText(line, textX, y)
 
   return new THREE.CanvasTexture(canvas)
 }
@@ -93,12 +95,12 @@ function PlaneWithTextTexture({
     setVector(new THREE.Vector3(x, y, z))
   }, [])
 
-  const handleClick = (fileId: string): void => {
+  const handleSelectFile = (fileId: string): void => {
     setSelectedFileId(fileId)
   }
 
   return (
-    <mesh position={vector} onClick={() => handleClick(id)}>
+    <mesh position={vector} onPointerEnter={() => handleSelectFile(id)}>
       <planeGeometry args={[1, 1, 1]} />
       <meshBasicMaterial side={THREE.DoubleSide} map={texture} transparent={true} />
     </mesh>
@@ -140,7 +142,6 @@ function Scene(): React.ReactElement {
       />
       <Planes />
       <EffectComposer>
-        {/* <DepthOfField focusDistance={0} focalLength={0.05} bokehScale={5} height={480} /> */}
         <Vignette eskil={false} offset={0.05} darkness={0.65} />
       </EffectComposer>
     </>
@@ -151,7 +152,6 @@ function MainCanvas(): React.ReactElement {
   return (
     <Canvas camera={{ position: [0, 0, 5], fov: 100 }}>
       <color attach="background" args={['#eee']} />
-      {/* <color attach="background" args={['#252525']} /> */}
       <Scene />
     </Canvas>
   )

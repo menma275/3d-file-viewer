@@ -1,7 +1,8 @@
 import Button from './Button'
 import { useEffect, useState } from 'react'
+import { FiArrowUpRight } from "react-icons/fi";
 
-function ShowItemInFolder({ filePath }: { filePath: string }) {
+function ShowItemInFolder({ filePath, title = "Open File" }: { filePath: string, title?: string }): React.ReactElement {
   const [path, setPath] = useState<string>(filePath)
 
   useEffect(() => {
@@ -14,7 +15,12 @@ function ShowItemInFolder({ filePath }: { filePath: string }) {
   }
 
   return (
-    <Button onClick={() => handleShow()}>Open File</Button>
+    <Button onClick={() => handleShow()} isFull={false} isFill={false}>
+      <p className='text-base flex flex-row gap-1 items-center'>
+        {title}
+        <FiArrowUpRight className='text-xl' />
+      </p>
+    </Button>
   )
 }
 
