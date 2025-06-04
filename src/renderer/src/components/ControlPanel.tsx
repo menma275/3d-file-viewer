@@ -2,7 +2,7 @@ import OpenDialog from './OpenDialog'
 import LoadData from './LoadData'
 import Analyze from './Analyze'
 import Button from './Button'
-import ShowItemInFolder from './ShowItemInFolder'
+import AxisControl from './AxisControl'
 import { BsLayoutSidebarReverse } from 'react-icons/bs'
 import type { FolderPath } from '../../../types/index'
 import { useState, useEffect } from 'react'
@@ -52,24 +52,12 @@ function ControlPanel(): React.ReactElement {
   }
 
   return (
-    <div className="absolute bottom-0 right-0 p-2 h-dvh max-w-xs ">
+    <div className="absolute bottom-0 right-0 p-2 h-dvh w-fit max-w-xs ">
       {isOpen && (
-        <div className="flex flex-col gap-2 pt-10 w-full h-full justify-end bg-mg/30 backdrop-blur-md text-xs text-primary p-2 border-[0.5px] border-bdr rounded-xl cursor-default overflow-x-hidden overflow-y-auto">
-          {/* <ChildPanel title="File Content"> */}
-          {/*   <div className="h-full flex flex-col gap-1"> */}
-          {/*     <p className="text-secondary"> */}
-          {/*       {selectedFile */}
-          {/*         ? selectedFile.filePath.split('/').pop() */}
-          {/*         : 'No File Selected : Click a file to see its content'} */}
-          {/*     </p> */}
-          {/*     {selectedFile && ( */}
-          {/*       <> */}
-          {/*         <p>{selectedFile.fileContent}</p> */}
-          {/*         <ShowItemInFolder filePath={selectedFile?.filePath} /> */}
-          {/*       </> */}
-          {/*     )} */}
-          {/*   </div> */}
-          {/* </ChildPanel> */}
+        <div className="flex flex-col gap-2 pt-10 w-full h-full justify-between bg-mg/30 backdrop-blur-md text-xs text-primary p-2 border-[0.5px] border-bdr rounded-xl cursor-default overflow-x-hidden overflow-y-auto">
+          <ChildPanel title="Axis Conrol">
+            <AxisControl />
+          </ChildPanel>
           <div className="flex flex-col gap-3">
             <ChildPanel title="Refrenced Folders">
               <ul className="flex flex-col items-start gap-1 w-full box-border truncate">

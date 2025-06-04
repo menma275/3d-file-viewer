@@ -1,6 +1,6 @@
 import MainCanvas from './components/Canvas'
 import ControlPanel from './components/ControlPanel'
-import AxisControl from './components/AxisControl'
+// import AxisControl from './components/AxisControl'
 import TextContent from './components/TextContent'
 
 function App(): React.ReactElement {
@@ -12,7 +12,7 @@ function App(): React.ReactElement {
       </div>
       {/* Operation Area */}
       <ControlPanel />
-      <AxisControl />
+      {/* <AxisControl /> */}
       <TextContent />
     </div>
   )

@@ -15,7 +15,7 @@ function TextContent(): React.ReactElement {
   }, [selectedFileId])
 
   return (
-    <div className="absolute top-0 left-0 p-14 h-fit max-w-md ">
+    <div className="absolute top-0 left-0 p-14 h-fit max-w-sm max-h-full">
       <div className="h-full flex flex-col gap-1">
         {selectedFile && (
           <>
@@ -23,7 +23,7 @@ function TextContent(): React.ReactElement {
               title={selectedFile.filePath.split('/').pop()}
               filePath={selectedFile?.filePath}
             />
-            <p className="ml-3 text-sm text-bg">{selectedFile.fileContent}</p>
+            <p className="ml-3 text-sm text-bg ">{selectedFile.fileContent}</p>
           </>
         )}
       </div>

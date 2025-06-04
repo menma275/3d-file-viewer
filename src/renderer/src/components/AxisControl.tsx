@@ -30,39 +30,49 @@ function AxisControl(): React.ReactElement {
   }
 
   return (
-    <div className="absolute bottom-0 left-0 p-8 h-fit w-fit">
-      <div className="flex flex-row gap-4 w-full h-full justify-between bg-mg/30 backdrop-blur-lg text-xs text-primary p-3 border-[0.5px] border-bdr rounded-xl cursor-default">
-        <label>
-          X
-          <select onChange={(e) => setAxisX(handleAxisId(e.target.value))} value={axisX}>
-            {axisList.map((axis: string) => (
-              <option key={axis} value={axis}>
-                {axis}
-              </option>
-            ))}
-          </select>
-        </label>
-        <label>
-          Y
-          <select onChange={(e) => setAxisY(handleAxisId(e.target.value))} value={axisY}>
-            {axisList.map((axis: string) => (
-              <option key={axis} value={axis}>
-                {axis}
-              </option>
-            ))}
-          </select>
-        </label>
-        <label>
-          Z
-          <select onChange={(e) => setAxisZ(handleAxisId(e.target.value))} value={axisZ}>
-            {axisList.map((axis: string) => (
-              <option key={axis} value={axis}>
-                {axis}
-              </option>
-            ))}
-          </select>
-        </label>
-      </div>
+    <div className="flex flex-col gap-4 w-full h-full justify-between  text-xs text-primary ">
+      <label className="flex w-full justify-between items-center gap-2">
+        X
+        <select
+          className="bg-mg p-1 rounded-md"
+          onChange={(e) => setAxisX(handleAxisId(e.target.value))}
+          value={axisX}
+        >
+          {axisList.map((axis: string) => (
+            <option key={axis} value={axis}>
+              {axis}
+            </option>
+          ))}
+        </select>
+      </label>
+      <label className="flex w-full justify-between items-center gap-2">
+        Y
+        <select
+          className="bg-mg p-1 rounded-md"
+          onChange={(e) => setAxisY(handleAxisId(e.target.value))}
+          value={axisY}
+        >
+          {axisList.map((axis: string) => (
+            <option key={axis} value={axis}>
+              {axis}
+            </option>
+          ))}
+        </select>
+      </label>
+      <label className="flex w-full justify-between items-center gap-2">
+        Z
+        <select
+          className="bg-mg p-1 rounded-md"
+          onChange={(e) => setAxisZ(handleAxisId(e.target.value))}
+          value={axisZ}
+        >
+          {axisList.map((axis: string) => (
+            <option key={axis} value={axis}>
+              {axis}
+            </option>
+          ))}
+        </select>
+      </label>
     </div>
   )
 }
