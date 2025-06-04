@@ -4,7 +4,8 @@ import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import icon from '../../resources/icon.png?asset'
 import { v4 as uuidv4 } from 'uuid'
 import Store from 'electron-store'
-import { OllamaEmbeddings } from '@langchain/ollama'
+import { OllamaEmbeddings, ChatOllama } from '@langchain/ollama'
+import { PromptTemplate } from "@langchain/core/prompts"
 import type { FolderPath, FolderSchema, FileSchema, CustomVectorSchema } from '../types/index'
 import { readFile, readdir, stat } from 'node:fs/promises'
 
@@ -110,6 +111,56 @@ ipcMain.handle('ollama:embed', async (_, prompt: string): Promise<number[]> => {
     return result
   } catch (err) {
     console.error('埋め込み取得中にエラー:', err)
+    return []
+  }
+})
+
+ipcMain.handle('ollama:custom', async (_, file: string, customVecs: string[]): Promise<number[]>=> {
+  try {
+    const prompt = PromptTemplate.fromTemplate(
+      `Score the content below from 0 to 1 for each of the following words.Return the result as a JSON array of numbers in the same order as the words.
+      Words: {customVec}
+      Content: {content}`
+    )
+    const chatModel = new ChatOllama({
+      model: 'gemma3',
+      maxRetries: 2
+    })
+
+    const chain = prompt.pipe(chatModel)
+    const result = await chain.invoke({
+      customVec: customVecs.join(', '),
+      content: file
+    })
+
+    if (typeof result.content === 'string') {
+      try {
+        const match = result.content.match(/\[[\s\S]*?\]/)
+        if (!match) {
+          console.warn('スコア配列が見つかりません:', result.content)
+          return []
+        }
+        const parsed = JSON.parse(match[0]) as number[]
+        if (
+          Array.isArray(parsed) &&
+          parsed.length === customVecs.length &&
+          parsed.every(n => typeof n === 'number')
+        ) {
+          return parsed
+        } else {
+          console.warn('不正なスコア配列:', parsed)
+          return []
+        }
+      } catch (err) {
+        console.error('スコアのJSONパースに失敗:', result.content)
+        return []
+      }
+    } else {
+      console.warn('result.contentが文字列ではありません:', result.content)
+      return []
+    }
+  } catch (err) {
+    console.error('ChatOllamaエラー:', err)
     return []
   }
 })

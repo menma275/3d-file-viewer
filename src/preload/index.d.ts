@@ -1,4 +1,5 @@
 import { ElectronAPI } from '@electron-toolkit/preload'
+import { MessageContent } from '@langchain/core/messages'
 
 declare global {
   interface Window {
@@ -8,6 +9,7 @@ declare global {
       getFolderPaths: () => Promise<FolderPath[]>
       addFolderPath: (folderPath: string) => Promise<void>
       embedding: (prompt: string) => Promise<number[]>
+      getCustomScore: (file: string, customVecs: CustomVectorSchema[]) => Promise<number[]>
       readFile: (filePath: string) => Promise<string | null>
       readDir: (dirPath: string) => Promise<string[] | null>
       statFile: (filePath: string) => Promise<fs.Stats>
