@@ -9,7 +9,7 @@ declare global {
       getFolderPaths: () => Promise<FolderPath[]>
       addFolderPath: (folderPath: string) => Promise<void>
       embedding: (prompt: string) => Promise<number[]>
-      graphicToText: (graphic: Buffer) => Promise<string>
+      graphicToText: (graphic: Buffer) => Promise<{content: string, base64: string}>
       getCustomScore: (file: string, customVecs: CustomVectorSchema[]) => Promise<string>
       readFile: (filePath: string) => Promise<string | null>
       readDir: (dirPath: string) => Promise<string[] | null>

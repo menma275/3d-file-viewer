@@ -123,17 +123,18 @@ const dataAnalyze = async (
 
                     //画像をvisionモデルのLLMに文字に変換してもらう
                     const graToText = await window.api.graphicToText(gFilePath)
-                    console.log(graToText)
+                    // const graToBuff = await window.api.readFile(gFilePath)
+                    const base64Gra = graToText.base64
+                    
                     //responseとすでにstoreされている、各ファイルのembeddings多次元データを全て取得してきて、PCRにかけて次元削減
-                    const gResponse: number[] = await window.api.embedding(graToText)
-                    console.log(gResponse)
+                    const gResponse: number[] = await window.api.embedding(graToText.content)
                     const gFileId = gExisting?.id || uuidv4()
 
                     const newgFileData: FileData = {
                         id: gFileId,
                         filePath: gFilePath,
                         fileType: gFilePath.split('.').pop(),
-                        fileContent: gFileContent,
+                        fileContent: base64Gra,
                         createdAt: gCreatedAt,
                         updatedAt: gUpdatedAt,
                         analyzedAt: new Date(),
@@ -183,22 +184,16 @@ const dataAnalyze = async (
 
         console.log('custom解析完了')
 
-        console.log(`newFileDataList:${newFileDataList}`)
-
         //解析後上書き保存できるようにidを持っておく
         const embedVecs = newFileDataList.map(file => ({
             id: file.id,
             embeddingRaw: file.vectors.embeddingRaw
         }))
 
-        console.log(`embedVecs:${embedVecs}`)
-
         //pcaへの入力データ
         const rawVecs = embedVecs.map(emb => emb.embeddingRaw)
 
-        // responseとembedVecをPCAに入力して戻り値をそれぞれのjsonファイルに上書きする
-        console.log("rawVecs:", rawVecs)
-        console.log("各ベクトルの次元数:", rawVecs.map(v => v.length))
+        //responseとembedVecをPCAに入力して戻り値をそれぞれのjsonファイルに上書きする
         const reducedVec:number[][] = await reduceTo3D(rawVecs)
 
         const idToReducedVec = new Map<string, number[]>();

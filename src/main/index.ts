@@ -115,7 +115,7 @@ ipcMain.handle('ollama:embed', async (_, prompt: string): Promise<number[]> => {
   }
 })
 
-ipcMain.handle('ollama:vision', async (_, imagePath: string): Promise<string> => {
+ipcMain.handle('ollama:vision', async (_, imagePath: string): Promise<{content: string, base64: string}> => {
   try {
     const buffer = await readFile(imagePath); // 画像をバイナリで読み込む
     const base64Image = buffer.toString('base64')
@@ -142,11 +142,14 @@ ipcMain.handle('ollama:vision', async (_, imagePath: string): Promise<string> =>
       }
     ])
     if(typeof result.content === 'string'){
-      return result.content
-    }else return ''
+      return {
+        content: result.content,
+        base64: base64Image
+      }
+    }else return {content:'', base64: ''}
   } catch (err) {
     console.error('画像読み込み or モデル処理エラー:', err)
-    return '画像の読み込みまたは処理に失敗しました。'
+    return {content:'画像の読み込みまたは処理に失敗しました。', base64: ''}
   }
 })
 
@@ -210,6 +213,7 @@ ipcMain.handle('readDir', async (_, dirPath) => {
 ipcMain.handle('fileDatas:get', async () => {
   // const store = new Store()
   // store.delete('fileDatas')
+  // store.delete('folders')
   return fileDataStore.get('fileDatas', [])
 })
 
