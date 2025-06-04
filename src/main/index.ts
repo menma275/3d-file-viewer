@@ -115,53 +115,82 @@ ipcMain.handle('ollama:embed', async (_, prompt: string): Promise<number[]> => {
   }
 })
 
-ipcMain.handle('ollama:custom', async (_, file: string, customVecs: string[]): Promise<number[]>=> {
+ipcMain.handle('ollama:vision', async (_, imagePath: string): Promise<{content: string, base64: string}> => {
+  try {
+    const buffer = await readFile(imagePath); // 画像をバイナリで読み込む
+    const base64Image = buffer.toString('base64')
+    const mimeType = imagePath.endsWith('.png') ? 'image/png' : 'image/jpeg'
+    const imageDataUrl = `data:${mimeType};base64,${base64Image}`
+
+    const chat = new ChatOllama({
+      model: 'gemma3', // Vision対応モデル（他のやつのがいいかも一旦gemma3）
+      temperature: 0
+    })
+
+    const result = await chat.invoke([
+      {
+        role: 'user',
+        content: [
+          {
+            type: 'image_url',
+            image_url: { url: imageDataUrl }
+          },
+          {
+            type: 'text',
+            text: 'You are an image analysis system. Output only the description of the image contents in plain text. Do not include any greetings, explanations, or extra text.'          }
+        ]
+      }
+    ])
+    if(typeof result.content === 'string'){
+      return {
+        content: result.content,
+        base64: base64Image
+      }
+    }else return {content:'', base64: ''}
+  } catch (err) {
+    console.error('画像読み込み or モデル処理エラー:', err)
+    return {content:'画像の読み込みまたは処理に失敗しました。', base64: ''}
+  }
+})
+
+ipcMain.handle('ollama:custom', async (_, files: string, customVecs: string[]): Promise<string>=> {
   try {
     const prompt = PromptTemplate.fromTemplate(
-      `Score the content below from 0 to 1 for each of the following words.Return the result as a JSON array of numbers in the same order as the words.
-      Words: {customVec}
-      Content: {content}`
+      `You are a scoring system. Do not add any explanations, greetings, or extra text.
+      Score the following content from 0.000 to 1.000 for each of the given words. 
+      Return only a JSON array of numbers in the same order as the words.  
+      Do not include any additional text or formatting.
+      for example
+      Content: "I'm not really impressed, but it wasn't horrible either."
+      Respond in JSON format like this:
+      {{
+        "word1": 0.224,
+        "word2": 0.003,
+        "word3": 0.503
+      }}
+        Words: {customVec}  
+        Content: {content}`
     )
     const chatModel = new ChatOllama({
       model: 'gemma3',
-      maxRetries: 2
+      maxRetries: 2,
+      temperature: 0
     })
 
     const chain = prompt.pipe(chatModel)
     const result = await chain.invoke({
       customVec: customVecs.join(', '),
-      content: file
+      content: files
     })
 
-    if (typeof result.content === 'string') {
-      try {
-        const match = result.content.match(/\[[\s\S]*?\]/)
-        if (!match) {
-          console.warn('スコア配列が見つかりません:', result.content)
-          return []
-        }
-        const parsed = JSON.parse(match[0]) as number[]
-        if (
-          Array.isArray(parsed) &&
-          parsed.length === customVecs.length &&
-          parsed.every(n => typeof n === 'number')
-        ) {
-          return parsed
-        } else {
-          console.warn('不正なスコア配列:', parsed)
-          return []
-        }
-      } catch (err) {
-        console.error('スコアのJSONパースに失敗:', result.content)
-        return []
-      }
+    if(typeof result.content === 'string'){
+      return result.content
     } else {
-      console.warn('result.contentが文字列ではありません:', result.content)
-      return []
+      return 'contentがstringではありません'
     }
   } catch (err) {
     console.error('ChatOllamaエラー:', err)
-    return []
+    return ''
   }
 })
 
@@ -182,6 +211,9 @@ ipcMain.handle('readDir', async (_, dirPath) => {
 })
 
 ipcMain.handle('fileDatas:get', async () => {
+  // const store = new Store()
+  // store.delete('fileDatas')
+  // store.delete('folders')
   return fileDataStore.get('fileDatas', [])
 })
 

@@ -8,31 +8,47 @@ function OpenDialog(): React.ReactElement {
             onClick={async () => {
                 const folders = await window.api.getFolderPaths();
                 const folderPaths: string[] = folders.map(folder => folder.folderPath);
-                const allFiles: string[] = [];
+                const textFiles: string[] = []
+                const graphicFiles: string[] = []
                 for (const folderPath of folderPaths) {
-                    const fileNames = await window.api.readDir(folderPath);
+                    const fileNames = await window.api.readDir(folderPath)
                     if(fileNames){
                         for (const name of fileNames) {
-                            //隠しファイルをここで除く＋画像ファイルとテキストファイルを分ける
-                            console.log(name)
-                            if(name.charAt(0)!=='.'){
-                                allFiles.push(`${folderPath}/${name}`);
+                            // 隠しファイルを除外
+                            if (name.charAt(0) !== '.') {
+                                const fullPath = `${folderPath}/${name}`
+                                const ext = name.split('.').pop()?.toLowerCase()
+
+                                if (['txt', 'md', 'json'].includes(ext || '')) {
+                                textFiles.push(fullPath)
+                                } else if (['png', 'jpg', 'jpeg', 'gif'].includes(ext || '')) {
+                                // 必要なら画像ファイルの処理もここで書く
+                                graphicFiles.push(fullPath)
+                                }
                             }
                         }
                     }
                 }
 
-                const fileContents = await Promise.all(
-                    allFiles.map(filePath => window.api.readFile(filePath))
+                const textFileContents = await Promise.all(
+                    textFiles.map(filePath => window.api.readFile(filePath))
                 );
 
+                const graphicFileContents = await Promise.all(
+                    graphicFiles.map(filePath => window.api.readFile(filePath))
+                )
+
                 const stats = await Promise.all(
-                    allFiles.map(filePath => window.api.statFile(filePath))
+                    textFiles.map(filePath => window.api.statFile(filePath))
                 );
+
+                const gStats = await Promise.all(
+                    graphicFiles.map(filePath => window.api.statFile(filePath))
+                )
 
                 const analyzedDatas = await window.api.getFileDatas();
 
-                const newData:FileData[] = await dataAnalyze(analyzedDatas, folderPaths, allFiles, fileContents, stats);
+                const newData:FileData[] = await dataAnalyze(analyzedDatas, graphicFiles, graphicFileContents, textFiles, textFileContents, gStats,stats);
                 
                 if (newData === null) return;
 
