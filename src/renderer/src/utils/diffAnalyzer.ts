@@ -1,5 +1,5 @@
 import { v4 as uuidv4 } from 'uuid'
-import type { FileData } from '../../../types/index'
+import type { FileData, CustomVectorSchema } from '../../../types/index'
 import reduceTo3D from './reduceDims'
 
 //fileDatasgetで保存済みのファイルデータをとってくる
@@ -45,6 +45,14 @@ const dataAnalyze = async (
 
                 //以下は指定したパラメータに対してテキストモデルに判定してもらう処理
                 //customvectorshema.nameを持ってきてその単語を投げる
+                const customVecSchemas: CustomVectorSchema[] = await window.api.getCustomVectorName()
+                const customVecNames: string[] = customVecSchemas.map(c => c.name)
+                //const customScores: number[] = await window.api.getCustomScore(fileContent, customVecNames)
+
+                // const customVectorValues = customVecSchemas.map((schema, index) => ({
+                //     schemaId: schema.id,
+                //     value: customScores[index] ?? 1
+                // }))
 
                 const fileId = existing?.id || uuidv4()
 
@@ -57,13 +65,13 @@ const dataAnalyze = async (
                     updatedAt: updatedAt,
                     analyzedAt: new Date(),
                     vectors: {
-                        embedding: [0.1, 0.2, 0.3], // 失敗時の仮データ
-                        embeddingRaw: response, // 失敗時の仮データ
-                        customVectorValues: [
-                          { schemaId: 'parameter01', value: 0.1 },
-                          { schemaId: 'parameter02', value: 0.2 },
-                          { schemaId: 'parameter03', value: 0.2 }
-                        ]
+                        embedding: [], // 失敗時の仮データ
+                        embeddingRaw: response,
+                        //customVectorValues
+                        customVectorValues : [{
+                            schemaId: "aaa",
+                            value: 0.2
+                        }]
                     }
                 }
                 newFileDataList.push(newFileData)
@@ -72,6 +80,8 @@ const dataAnalyze = async (
             }
 
         }
+
+        console.log('custom解析完了')
 
         //解析後上書き保存できるようにidを持っておく
         const embedVecs = newFileDataList.map(file => ({

@@ -13,7 +13,11 @@ function OpenDialog(): React.ReactElement {
                     const fileNames = await window.api.readDir(folderPath);
                     if(fileNames){
                         for (const name of fileNames) {
-                            allFiles.push(`${folderPath}/${name}`);
+                            //隠しファイルをここで除く＋画像ファイルとテキストファイルを分ける
+                            console.log(name)
+                            if(name.charAt(0)!=='.'){
+                                allFiles.push(`${folderPath}/${name}`);
+                            }
                         }
                     }
                 }

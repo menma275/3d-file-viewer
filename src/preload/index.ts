@@ -6,6 +6,7 @@ const api = {
   getFolderPaths: () => ipcRenderer.invoke('folderPath:get'),
   addFolderPath: (folderPath: string) => ipcRenderer.invoke('folderPath:add', folderPath),
   embedding: (prompt: string) => ipcRenderer.invoke('ollama:embed', prompt),
+  getCustomScore: (file: string, customVecs: string[]) => ipcRenderer.invoke('ollama:custom', file, customVecs),
   readFile: (filePath: string) => ipcRenderer.invoke('readFile', filePath),
   readDir: (dirPath: string) => ipcRenderer.invoke('readDir', dirPath),
   statFile: (filePath: string) => ipcRenderer.invoke('fileStat', filePath),
