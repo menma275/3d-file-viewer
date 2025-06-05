@@ -1,5 +1,5 @@
 import * as THREE from 'three'
-import { useMemo, useEffect, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Canvas } from '@react-three/fiber'
 import { OrbitControls } from '@react-three/drei'
 import { EffectComposer, DepthOfField, Vignette } from '@react-three/postprocessing'
@@ -72,23 +72,102 @@ function createTextTexture(text: string): THREE.Texture {
     if (y - lineHeight > canvas.height - textY * 2) break
   }
 
-  // context.fillText(line, textX, y)
-
   return new THREE.CanvasTexture(canvas)
 }
 
-function PlaneWithTextTexture({
+function Plane({
   id,
+  isImage = false,
   text,
-  vectors
+  vectors,
+  filePath
 }: {
   id: string
+  isImage?: boolean
   text: string
   vectors: Vectors
+  filePath?: string
 }): React.ReactElement {
   const [selectedFileId, setSelectedFileId] = useAtom(selectedFileIdAtom)
-  const texture = useMemo(() => createTextTexture(text), [text])
   const [vector, setVector] = useState<THREE.Vector3>(new THREE.Vector3())
+
+  // const texture = useMemo(() => {
+  //   return createTextTexture(text)
+  // }, [text])
+  //
+  const [texture, setTexture] = useState<THREE.Texture | null>(null)
+
+  useEffect(() => {
+    let cancelled = false
+
+    const loadTexture = async () => {
+      if (isImage && filePath) {
+        try {
+          const base64 = await window.api.getBase64Image(filePath)
+          const img = new Image()
+          img.src = base64
+
+          img.onload = () => {
+            if (cancelled) return
+
+            const canvas = document.createElement('canvas')
+            const ctx = canvas.getContext('2d')
+            if (!ctx) return
+
+            canvas.width = 512
+            canvas.height = 512
+
+            drawRoundedRect(ctx, 0, 0, canvas.width, canvas.height, 32)
+            ctx.fillStyle = '#fff'
+            ctx.strokeStyle = '#ccc'
+            ctx.lineWidth = 4
+            ctx.fillRect(0, 0, canvas.width, canvas.height)
+            ctx.stroke()
+
+            const canvasAspect = canvas.width / canvas.height
+            const imageAspect = img.width / img.height
+
+            let srcX = 0, srcY = 0, srcWidth = img.width, srcHeight = img.height
+
+            if (imageAspect > canvasAspect) {
+              // Image is wider — crop horizontally
+              srcWidth = img.height * canvasAspect
+              srcX = (img.width - srcWidth) / 2
+            } else {
+              // Image is taller — crop vertically
+              srcHeight = img.width / canvasAspect
+              srcY = (img.height - srcHeight) / 2
+            }
+
+            ctx.drawImage(
+              img,
+              srcX,
+              srcY,
+              srcWidth,
+              srcHeight,
+              0,
+              0,
+              canvas.width,
+              canvas.height
+            )
+
+            setTexture(new THREE.CanvasTexture(canvas))
+          }
+        } catch (e) {
+          console.error('Failed to load image texture:', e)
+          setTexture(createTextTexture(text))
+        }
+      } else {
+        setTexture(createTextTexture(text))
+      }
+    }
+
+    loadTexture()
+
+    return () => {
+      cancelled = true
+    }
+  }, [isImage, filePath, text])
 
   const [axisX] = useAtom(axisXAtom)
   const [axisY] = useAtom(axisYAtom)
@@ -183,11 +262,13 @@ function Planes(): React.ReactElement {
   return (
     <>
       {datas.map((data: FileData) => (
-        <PlaneWithTextTexture
+        <Plane
           key={data.id}
+          isImage={data.fileType === 'jpg' || data.fileType === 'png'}
           id={data.id}
           text={data.fileContent}
           vectors={data.vectors}
+          filePath={data.filePath}
         />
       ))}
     </>

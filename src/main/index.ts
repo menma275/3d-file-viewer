@@ -115,7 +115,7 @@ ipcMain.handle('ollama:embed', async (_, prompt: string): Promise<number[]> => {
   }
 })
 
-ipcMain.handle('ollama:vision', async (_, imagePath: string): Promise<{content: string, base64: string}> => {
+ipcMain.handle('ollama:vision', async (_, imagePath: string): Promise<{ content: string, base64: string }> => {
   try {
     const buffer = await readFile(imagePath); // 画像をバイナリで読み込む
     const base64Image = buffer.toString('base64')
@@ -123,7 +123,8 @@ ipcMain.handle('ollama:vision', async (_, imagePath: string): Promise<{content: 
     const imageDataUrl = `data:${mimeType};base64,${base64Image}`
 
     const chat = new ChatOllama({
-      model: 'gemma3', // Vision対応モデル（他のやつのがいいかも一旦gemma3）
+      model: 'llava', // Vision対応モデル
+      // model: 'gemma3', // Vision対応モデル（他のやつのがいいかも一旦gemma3）
       temperature: 0
     })
 
@@ -137,28 +138,29 @@ ipcMain.handle('ollama:vision', async (_, imagePath: string): Promise<{content: 
           },
           {
             type: 'text',
-            text: 'You are an image analysis system. Output only the description of the image contents in plain text. Do not include any greetings, explanations, or extra text.'          }
+            text: 'You are an image analysis system. Output only the description of the image contents in plain text. Do not include any greetings, explanations, or extra text.'
+          }
         ]
       }
     ])
-    if(typeof result.content === 'string'){
+    if (typeof result.content === 'string') {
       return {
         content: result.content,
         base64: base64Image
       }
-    }else return {content:'', base64: ''}
+    } else return { content: '', base64: '' }
   } catch (err) {
     console.error('画像読み込み or モデル処理エラー:', err)
-    return {content:'画像の読み込みまたは処理に失敗しました。', base64: ''}
+    return { content: '画像の読み込みまたは処理に失敗しました。', base64: '' }
   }
 })
 
-ipcMain.handle('ollama:custom', async (_, files: string, customVecs: string[]): Promise<string>=> {
+ipcMain.handle('ollama:custom', async (_, files: string, customVecs: string[]): Promise<string> => {
   try {
     const prompt = PromptTemplate.fromTemplate(
       `You are a scoring system. Do not add any explanations, greetings, or extra text.
-      Score the following content from 0.000 to 1.000 for each of the given words. 
-      Return only a JSON array of numbers in the same order as the words.  
+      Score the following content from 0.000 to 1.000 for each of the given words.
+      Return only a JSON array of numbers in the same order as the words.
       Do not include any additional text or formatting.
       for example
       Content: "I'm not really impressed, but it wasn't horrible either."
@@ -168,7 +170,7 @@ ipcMain.handle('ollama:custom', async (_, files: string, customVecs: string[]): 
         "word2": 0.003,
         "word3": 0.503
       }}
-        Words: {customVec}  
+        Words: {customVec}
         Content: {content}`
     )
     const chatModel = new ChatOllama({
@@ -183,7 +185,7 @@ ipcMain.handle('ollama:custom', async (_, files: string, customVecs: string[]): 
       content: files
     })
 
-    if(typeof result.content === 'string'){
+    if (typeof result.content === 'string') {
       return result.content
     } else {
       return 'contentがstringではありません'
@@ -208,6 +210,11 @@ ipcMain.handle('fileStat', async (_event, filePath) => {
 
 ipcMain.handle('readDir', async (_, dirPath) => {
   return await readdir(dirPath)
+})
+
+ipcMain.handle('fileDatas:delete', async () => {
+  const store = new Store()
+  store.delete('fileDatas')
 })
 
 ipcMain.handle('fileDatas:get', async () => {
@@ -244,4 +251,14 @@ ipcMain.handle('customVectorStore:add', async (_, customVectorName: string) => {
 ipcMain.handle('showItemInFolder', async (_, filePath: string) => {
   // shell.openPath(filePath)
   shell.showItemInFolder(filePath)
+})
+
+// base64
+ipcMain.handle('base64', async (_, filePath: string) => {
+  const buffer = await readFile(filePath); // 画像をバイナリで読み込む
+  const base64Image = buffer.toString('base64')
+  const mimeType = filePath.endsWith('.png') ? 'image/png' : 'image/jpeg'
+  const imageDataUrl = `data:${mimeType};base64,${base64Image}`
+
+  return imageDataUrl
 })

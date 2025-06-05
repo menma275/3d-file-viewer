@@ -1,6 +1,7 @@
 import OpenDialog from './OpenDialog'
 import LoadData from './LoadData'
 import Analyze from './Analyze'
+import ClearFileData from './ClearFileData'
 import Button from './Button'
 import AxisControl from './AxisControl'
 import { BsLayoutSidebarReverse } from 'react-icons/bs'
@@ -73,6 +74,7 @@ function ControlPanel(): React.ReactElement {
             <ChildPanel title="Manage Files">
               <div className="flex flex-row gap-2">
                 <LoadData />
+                <ClearFileData />
                 <Analyze />
               </div>
             </ChildPanel>

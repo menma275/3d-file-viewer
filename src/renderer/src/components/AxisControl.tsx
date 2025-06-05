@@ -14,11 +14,11 @@ function AxisControl(): React.ReactElement {
     window.api.getCustomVectorName().then(setCustomAxisList)
   }, [])
 
-  useEffect(() => {
-    setAxisList((prevList) => [
-      ...new Set([...prevList, ...customAxisList.map((axis) => axis.name)])
-    ])
-  }, [customAxisList])
+  // useEffect(() => {
+  //   setAxisList((prevList) => [
+  //     ...new Set([...prevList, ...customAxisList.map((axis) => axis.name)])
+  //   ])
+  // }, [customAxisList])
 
   const handleAxisId = (name: string): string => {
     if (['ex', 'ey', 'ez'].includes(name)) return name
