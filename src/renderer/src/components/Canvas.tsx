@@ -89,13 +89,81 @@ function Plane({
   filePath?: string
 }): React.ReactElement {
   const [selectedFileId, setSelectedFileId] = useAtom(selectedFileIdAtom)
-  const [vector, setVector] = useState<THREE.Vector3>(new THREE.Vector3())
-
-  // const texture = useMemo(() => {
-  //   return createTextTexture(text)
-  // }, [text])
-  //
   const [texture, setTexture] = useState<THREE.Texture | null>(null)
+  const [hovered, setHovered] = useState<boolean>(false)
+
+  const [vector, setVector] = useState<THREE.Vector3>(new THREE.Vector3())
+  const [axisX] = useAtom(axisXAtom)
+  const [axisY] = useAtom(axisYAtom)
+  const [axisZ] = useAtom(axisZAtom)
+  const amp = 10
+
+
+  useEffect(() => {
+    let x = vectors.embedding[0]
+    switch (axisX) {
+      case 'ex':
+        x = vectors.embedding[0]
+        break
+      case 'ey':
+        x = vectors.embedding[1]
+        break
+      case 'ez':
+        x = vectors.embedding[2]
+        break
+      default:
+        x =
+          vectors?.customVectorValues?.find((v: CustomVectorValue) => v.schemaId === axisX)
+            ?.value || vectors.embedding[0]
+        break
+    }
+
+    setVector((prev) => new THREE.Vector3(x * amp, prev.y, prev.z))
+  }, [axisX, vectors])
+
+  useEffect(() => {
+    let y = vectors.embedding[0]
+    switch (axisY) {
+      case 'ex':
+        y = vectors.embedding[0]
+        break
+      case 'ey':
+        y = vectors.embedding[1]
+        break
+      case 'ez':
+        y = vectors.embedding[2]
+        break
+      default:
+        y =
+          vectors?.customVectorValues?.find((v: CustomVectorValue) => v.schemaId === axisY)
+            ?.value || vectors.embedding[0]
+        break
+    }
+
+    setVector((prev) => new THREE.Vector3(prev.x, y * amp, prev.z))
+  }, [axisY, vectors])
+
+  useEffect(() => {
+    let z = vectors.embedding[0]
+    switch (axisZ) {
+      case 'ex':
+        z = vectors.embedding[0]
+        break
+      case 'ey':
+        z = vectors.embedding[1]
+        break
+      case 'ez':
+        z = vectors.embedding[2]
+        break
+      default:
+        z =
+          vectors?.customVectorValues?.find((v: CustomVectorValue) => v.schemaId === axisZ)
+            ?.value || vectors.embedding[0]
+        break
+    }
+
+    setVector((prev) => new THREE.Vector3(prev.x, prev.y, z * amp))
+  }, [axisZ, vectors])
 
   useEffect(() => {
     let cancelled = false
@@ -169,83 +237,25 @@ function Plane({
     }
   }, [isImage, filePath, text])
 
-  const [axisX] = useAtom(axisXAtom)
-  const [axisY] = useAtom(axisYAtom)
-  const [axisZ] = useAtom(axisZAtom)
-  const amp = 10
-
-  useEffect(() => {
-    let x = vectors.embedding[0]
-    switch (axisX) {
-      case 'ex':
-        x = vectors.embedding[0]
-        break
-      case 'ey':
-        x = vectors.embedding[1]
-        break
-      case 'ez':
-        x = vectors.embedding[2]
-        break
-      default:
-        x =
-          vectors?.customVectorValues?.find((v: CustomVectorValue) => v.schemaId === axisX)
-            ?.value || vectors.embedding[0]
-        break
-    }
-
-    setVector((prev) => new THREE.Vector3(x * amp, prev.y, prev.z))
-  }, [axisX, vectors])
-
-  useEffect(() => {
-    let y = vectors.embedding[0]
-    switch (axisY) {
-      case 'ex':
-        y = vectors.embedding[0]
-        break
-      case 'ey':
-        y = vectors.embedding[1]
-        break
-      case 'ez':
-        y = vectors.embedding[2]
-        break
-      default:
-        y =
-          vectors?.customVectorValues?.find((v: CustomVectorValue) => v.schemaId === axisY)
-            ?.value || vectors.embedding[0]
-        break
-    }
-
-    setVector((prev) => new THREE.Vector3(prev.x, y * amp, prev.z))
-  }, [axisY, vectors])
-
-  useEffect(() => {
-    let z = vectors.embedding[0]
-    switch (axisZ) {
-      case 'ex':
-        z = vectors.embedding[0]
-        break
-      case 'ey':
-        z = vectors.embedding[1]
-        break
-      case 'ez':
-        z = vectors.embedding[2]
-        break
-      default:
-        z =
-          vectors?.customVectorValues?.find((v: CustomVectorValue) => v.schemaId === axisZ)
-            ?.value || vectors.embedding[0]
-        break
-    }
-
-    setVector((prev) => new THREE.Vector3(prev.x, prev.y, z * amp))
-  }, [axisZ, vectors])
-
+  const scale = hovered ? 1.05 : 1
   const handleSelectFile = (fileId: string): void => {
     setSelectedFileId(fileId)
   }
 
   return (
-    <mesh position={vector} onPointerEnter={() => handleSelectFile(id)}>
+    <mesh
+      scale={scale}
+      position={vector}
+      onPointerEnter={(e) => {
+        e.stopPropagation()
+        setHovered(true)
+        handleSelectFile(id)
+      }}
+      onPointerLeave={(e) => {
+        e.stopPropagation()
+        setHovered(false)
+      }}
+    >
       <planeGeometry args={[1, 1, 1]} />
       <meshBasicMaterial side={THREE.DoubleSide} map={texture} transparent={true} />
     </mesh>
@@ -281,10 +291,11 @@ function Scene(): React.ReactElement {
       <OrbitControls
         enableZoom={true}
         enablePan={true}
+        enableRotate={false}
         mouseButtons={{
-          LEFT: 0, // Rotate (default)
-          MIDDLE: 1, // Zoom
-          RIGHT: 2 // Pan OR rotate — we’ll customize below
+          LEFT: THREE.MOUSE.PAN,   // pan with left click
+          MIDDLE: THREE.MOUSE.DOLLY, // zoom with middle click
+          RIGHT: THREE.MOUSE.ROTATE  // not used here since rotation is disabled
         }}
       />
       <Planes />
