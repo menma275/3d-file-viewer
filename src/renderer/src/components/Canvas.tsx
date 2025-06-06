@@ -1,6 +1,6 @@
 import * as THREE from 'three'
-import { useEffect, useState } from 'react'
-import { Canvas } from '@react-three/fiber'
+import { useMemo, useEffect, useState, useRef } from 'react'
+import { Canvas, useFrame } from '@react-three/fiber'
 import { OrbitControls } from '@react-three/drei'
 import { EffectComposer, DepthOfField, Vignette } from '@react-three/postprocessing'
 import type { FileData, Vectors, CustomVectorValue } from '../../../types/index'
@@ -79,96 +79,24 @@ function Plane({
   id,
   isImage = false,
   text,
-  vectors,
+  position,
   filePath
 }: {
   id: string
   isImage?: boolean
   text: string
-  vectors: Vectors
+  position: THREE.Vector3
   filePath?: string
 }): React.ReactElement {
   const [selectedFileId, setSelectedFileId] = useAtom(selectedFileIdAtom)
   const [texture, setTexture] = useState<THREE.Texture | null>(null)
   const [hovered, setHovered] = useState<boolean>(false)
 
-  const [vector, setVector] = useState<THREE.Vector3>(new THREE.Vector3())
-  const [axisX] = useAtom(axisXAtom)
-  const [axisY] = useAtom(axisYAtom)
-  const [axisZ] = useAtom(axisZAtom)
-  const amp = 10
-
-
-  useEffect(() => {
-    let x = vectors.embedding[0]
-    switch (axisX) {
-      case 'ex':
-        x = vectors.embedding[0]
-        break
-      case 'ey':
-        x = vectors.embedding[1]
-        break
-      case 'ez':
-        x = vectors.embedding[2]
-        break
-      default:
-        x =
-          vectors?.customVectorValues?.find((v: CustomVectorValue) => v.schemaId === axisX)
-            ?.value || vectors.embedding[0]
-        break
-    }
-
-    setVector((prev) => new THREE.Vector3(x * amp, prev.y, prev.z))
-  }, [axisX, vectors])
-
-  useEffect(() => {
-    let y = vectors.embedding[0]
-    switch (axisY) {
-      case 'ex':
-        y = vectors.embedding[0]
-        break
-      case 'ey':
-        y = vectors.embedding[1]
-        break
-      case 'ez':
-        y = vectors.embedding[2]
-        break
-      default:
-        y =
-          vectors?.customVectorValues?.find((v: CustomVectorValue) => v.schemaId === axisY)
-            ?.value || vectors.embedding[0]
-        break
-    }
-
-    setVector((prev) => new THREE.Vector3(prev.x, y * amp, prev.z))
-  }, [axisY, vectors])
-
-  useEffect(() => {
-    let z = vectors.embedding[0]
-    switch (axisZ) {
-      case 'ex':
-        z = vectors.embedding[0]
-        break
-      case 'ey':
-        z = vectors.embedding[1]
-        break
-      case 'ez':
-        z = vectors.embedding[2]
-        break
-      default:
-        z =
-          vectors?.customVectorValues?.find((v: CustomVectorValue) => v.schemaId === axisZ)
-            ?.value || vectors.embedding[0]
-        break
-    }
-
-    setVector((prev) => new THREE.Vector3(prev.x, prev.y, z * amp))
-  }, [axisZ, vectors])
-
+  // Create Texture
   useEffect(() => {
     let cancelled = false
 
-    const loadTexture = async () => {
+    const loadTexture = async (): Promise<void> => {
       if (isImage && filePath) {
         try {
           const base64 = await window.api.getBase64Image(filePath)
@@ -195,7 +123,10 @@ function Plane({
             const canvasAspect = canvas.width / canvas.height
             const imageAspect = img.width / img.height
 
-            let srcX = 0, srcY = 0, srcWidth = img.width, srcHeight = img.height
+            let srcX = 0,
+              srcY = 0,
+              srcWidth = img.width,
+              srcHeight = img.height
 
             if (imageAspect > canvasAspect) {
               // Image is wider — crop horizontally
@@ -207,17 +138,7 @@ function Plane({
               srcY = (img.height - srcHeight) / 2
             }
 
-            ctx.drawImage(
-              img,
-              srcX,
-              srcY,
-              srcWidth,
-              srcHeight,
-              0,
-              0,
-              canvas.width,
-              canvas.height
-            )
+            ctx.drawImage(img, srcX, srcY, srcWidth, srcHeight, 0, 0, canvas.width, canvas.height)
 
             setTexture(new THREE.CanvasTexture(canvas))
           }
@@ -237,25 +158,38 @@ function Plane({
     }
   }, [isImage, filePath, text])
 
-  const scale = hovered ? 1.05 : 1
+  const ref = useRef<THREE.Mesh>(null)
+
+  // 位置のアニメーション
+  useFrame(() => {
+    if (!ref.current) return
+    ref.current.position.lerp(position, 0.15)
+  })
+
+  // スケールのアニメーション
+  useFrame(() => {
+    if (!ref.current) return
+    const targetScale = hovered ? 1.05 : 1
+    const current = ref.current.scale
+    const target = new THREE.Vector3(targetScale, targetScale, targetScale)
+    current.lerp(target, 0.3) // スムーズに補間
+  })
+
+  const handlePointerEnter = (e: PointerEvent): void => {
+    e.stopPropagation()
+    handleSelectFile(id)
+    setHovered(true)
+  }
+  const handlePointerLeave = (e: PointerEvent): void => {
+    e.stopPropagation()
+    setHovered(false)
+  }
   const handleSelectFile = (fileId: string): void => {
     setSelectedFileId(fileId)
   }
 
   return (
-    <mesh
-      scale={scale}
-      position={vector}
-      onPointerEnter={(e) => {
-        e.stopPropagation()
-        setHovered(true)
-        handleSelectFile(id)
-      }}
-      onPointerLeave={(e) => {
-        e.stopPropagation()
-        setHovered(false)
-      }}
-    >
+    <mesh ref={ref} onPointerEnter={handlePointerEnter} onPointerLeave={handlePointerLeave}>
       <planeGeometry args={[1, 1, 1]} />
       <meshBasicMaterial side={THREE.DoubleSide} map={texture} transparent={true} />
     </mesh>
@@ -264,53 +198,66 @@ function Plane({
 
 function Planes(): React.ReactElement {
   const [datas, setDatas] = useState<FileData[]>([])
+  const [positions, setPositions] = useState<THREE.Vector3[]>([])
+  const [axisX] = useAtom(axisXAtom)
+  const [axisY] = useAtom(axisYAtom)
+  const [axisZ] = useAtom(axisZAtom)
+  const amp = 10
 
   useEffect(() => {
     window.api.getFileDatas().then(setDatas)
-  })
+  }, [])
 
-  return (
-    <>
-      {datas.map((data: FileData) => (
-        <Plane
-          key={data.id}
-          isImage={data.fileType === 'jpg' || data.fileType === 'png'}
-          id={data.id}
-          text={data.fileContent}
-          vectors={data.vectors}
-          filePath={data.filePath}
-        />
-      ))}
-    </>
-  )
-}
+  useEffect(() => {
+    const newPosition: THREE.Vector3[] = datas.map((data: FileData) => {
+      const originX = data.vectors.customVectorValues.find((v) => v.schemaId === axisX)?.value || 0
+      const originY = data.vectors.customVectorValues.find((v) => v.schemaId === axisY)?.value || 0
+      const originZ = data.vectors.customVectorValues.find((v) => v.schemaId === axisZ)?.value || 0
 
-function Scene(): React.ReactElement {
-  return (
-    <>
-      <OrbitControls
-        enableZoom={true}
-        enablePan={true}
-        enableRotate={false}
-        mouseButtons={{
-          LEFT: THREE.MOUSE.PAN,   // pan with left click
-          MIDDLE: THREE.MOUSE.DOLLY, // zoom with middle click
-          RIGHT: THREE.MOUSE.ROTATE  // not used here since rotation is disabled
-        }}
+      const x = originX * amp
+      const y = originY * amp
+      const z = originZ * amp
+
+      return new THREE.Vector3(x, y, z)
+    })
+    setPositions(newPosition)
+  }, [datas, axisX, axisY, axisZ])
+
+  const planeComponents = useMemo(() => {
+    if (positions.length === 0) return null
+    return datas.map((data, index) => (
+      <Plane
+        key={data.id}
+        isImage={data.fileType === 'jpg' || data.fileType === 'png'}
+        id={data.id}
+        text={data.fileContent}
+        position={positions[index]}
+        filePath={data.filePath}
       />
-      <Planes />
-      <EffectComposer>
-        <Vignette eskil={false} offset={0.05} darkness={0.65} />
-      </EffectComposer>
-    </>
-  )
+    ))
+  }, [positions, datas])
+
+  return <>{planeComponents}</>
 }
 
 function MainCanvas(): React.ReactElement {
   return (
     <Canvas camera={{ position: [0, 0, 5], fov: 100 }}>
       <color attach="background" args={['#eee']} />
-      <Scene />
+      <OrbitControls
+        enableZoom={true}
+        enablePan={true}
+        enableRotate={false}
+        mouseButtons={{
+          LEFT: THREE.MOUSE.PAN, // pan with left click
+          MIDDLE: THREE.MOUSE.DOLLY, // zoom with middle click
+          RIGHT: THREE.MOUSE.ROTATE // not used here since rotation is disabled
+        }}
+      />
+      <Planes />
+      <EffectComposer>
+        <Vignette eskil={false} offset={0.05} darkness={0.65} />
+      </EffectComposer>
     </Canvas>
   )
 }

@@ -49,7 +49,8 @@ function ControlPanel(): React.ReactElement {
   }, [])
 
   const setCustomVectorName = (): void => {
-    window.api.addCustomVectorName(vectorName)
+    if (vectorName.trim() === '') return
+    window.api.addCustomVectorName(vectorName.trim())
   }
 
   return (
@@ -73,7 +74,7 @@ function ControlPanel(): React.ReactElement {
             </ChildPanel>
             <ChildPanel title="Manage Files">
               <div className="flex flex-row gap-2">
-                <LoadData />
+                {/* <LoadData /> */}
                 <ClearFileData />
                 <Analyze />
               </div>
@@ -81,11 +82,13 @@ function ControlPanel(): React.ReactElement {
             <ChildPanel title="Existing Vectors">
               {customVectors && (
                 <ul className="flex flex-col items-start gap-1 w-full box-border truncate">
-                  {customVectors.map((vector: CustomVectorSchema) => (
-                    <li key={vector.id} className="flex flex-col items-start gap-1">
-                      <span className="text-sm">{vector.name}</span>
-                    </li>
-                  ))}
+                  {customVectors
+                    .filter((vector) => !['ex', 'ey', 'ez'].includes(vector.id))
+                    .map((vector: CustomVectorSchema) => (
+                      <li key={vector.id} className="flex flex-col items-start gap-1">
+                        <span className="text-sm">{vector.name}</span>
+                      </li>
+                    ))}
                 </ul>
               )}
               <input

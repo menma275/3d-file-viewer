@@ -9,6 +9,10 @@ export type CustomVectorSchema = {
   name: string
 }
 
+export type CustomVectorStoreShape = {
+  customVectors: CustomVectorSchema[]
+}
+
 export type CustomVectorValue = {
   schemaId: string // refers to CustomVectorSchema.id
   value: number
@@ -19,10 +23,9 @@ export type CustomVectorValues = {
 }
 
 export type Vectors = {
-  embedding: number[]
+  // embedding: number[]
   embeddingRaw: number[]
   customVectorValues: CustomVectorValue[]
-  // customVectorValues: CustomVectorValues
 }
 
 // export type Vectors = {

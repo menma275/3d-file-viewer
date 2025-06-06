@@ -26,6 +26,7 @@
     "@electron-toolkit/utils": "^4.0.0",
     "@langchain/core": "^0.3.57",
     "@langchain/ollama": "^0.2.0",
+    "@react-spring/three": "^10.0.1",
     "@react-three/drei": "^10.0.8",
     "@react-three/fiber": "^9.1.2",
     "@react-three/postprocessing": "^3.0.4",

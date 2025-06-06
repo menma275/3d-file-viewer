@@ -5,11 +5,15 @@ import icon from '../../resources/icon.png?asset'
 import { v4 as uuidv4 } from 'uuid'
 import Store from 'electron-store'
 import { OllamaEmbeddings, ChatOllama } from '@langchain/ollama'
-import { PromptTemplate } from "@langchain/core/prompts"
-import type { FolderPath, FolderSchema, FileSchema, CustomVectorSchema } from '../types/index'
+import { PromptTemplate } from '@langchain/core/prompts'
+import type {
+  FolderPath,
+  FolderSchema,
+  FileSchema,
+  CustomVectorSchema,
+  CustomVectorStoreShape
+} from '../types/index'
 import { readFile, readdir, stat } from 'node:fs/promises'
-
-//let ollamaProcess: ReturnType<typeof spawn> | null = null
 
 function createWindow(): void {
   // Create the browser window.
@@ -115,67 +119,72 @@ ipcMain.handle('ollama:embed', async (_, prompt: string): Promise<number[]> => {
   }
 })
 
-ipcMain.handle('ollama:vision', async (_, imagePath: string): Promise<{ content: string, base64: string }> => {
-  try {
-    const buffer = await readFile(imagePath); // 画像をバイナリで読み込む
-    const base64Image = buffer.toString('base64')
-    const mimeType = imagePath.endsWith('.png') ? 'image/png' : 'image/jpeg'
-    const imageDataUrl = `data:${mimeType};base64,${base64Image}`
+ipcMain.handle(
+  'ollama:vision',
+  async (_, imagePath: string): Promise<{ content: string; base64: string }> => {
+    try {
+      const buffer = await readFile(imagePath) // 画像をバイナリで読み込む
+      const base64Image = buffer.toString('base64')
+      const mimeType = imagePath.endsWith('.png') ? 'image/png' : 'image/jpeg'
+      const imageDataUrl = `data:${mimeType};base64,${base64Image}`
 
-    const chat = new ChatOllama({
-      model: 'llava', // Vision対応モデル
-      // model: 'gemma3', // Vision対応モデル（他のやつのがいいかも一旦gemma3）
-      temperature: 0
-    })
+      const chat = new ChatOllama({
+        model: 'llava', // Vision対応モデル
+        // model: 'gemma3', // Vision対応モデル（他のやつのがいいかも一旦gemma3）
+        temperature: 0
+      })
 
-    const result = await chat.invoke([
-      {
-        role: 'user',
-        content: [
-          {
-            type: 'image_url',
-            image_url: { url: imageDataUrl }
-          },
-          {
-            type: 'text',
-            text: 'You are an image analysis system. Output only the description of the image contents in plain text. Do not include any greetings, explanations, or extra text.'
-          }
-        ]
-      }
-    ])
-    if (typeof result.content === 'string') {
-      return {
-        content: result.content,
-        base64: base64Image
-      }
-    } else return { content: '', base64: '' }
-  } catch (err) {
-    console.error('画像読み込み or モデル処理エラー:', err)
-    return { content: '画像の読み込みまたは処理に失敗しました。', base64: '' }
+      const result = await chat.invoke([
+        {
+          role: 'user',
+          content: [
+            {
+              type: 'image_url',
+              image_url: { url: imageDataUrl }
+            },
+            {
+              type: 'text',
+              // text: 'あなたは画像解析システムです。画像の内容の説明だけを、流暢な日本語でプレーンテキストで出力してください。挨拶や説明、余計な文章は入れないでください。'
+              text: 'You are an image analysis system. Output only the description of the image contents in plain text in fluent Japanese. Do not include any greetings, explanations, or extra text.'
+              // text: 'You are an image analysis system. Output only the description of the image contents in plain text. Do not include any greetings, explanations, or extra text.'
+            }
+          ]
+        }
+      ])
+      if (typeof result.content === 'string') {
+        return {
+          content: result.content,
+          base64: base64Image
+        }
+      } else return { content: '', base64: '' }
+    } catch (err) {
+      console.error('画像読み込み or モデル処理エラー:', err)
+      return { content: '画像の読み込みまたは処理に失敗しました。', base64: '' }
+    }
   }
-})
+)
 
 // `You are a scoring system. Do not add any explanations, greetings, or extra text.
-      // Score the following content from 0.000 to 1.000 for each of the given words.
-      // Return only a JSON array of numbers in the same order as the words.
-      // Do not include any additional text or formatting.
-      // for example
-      // Content: "***file1***I'm not really impressed, but it wasn't horrible either., ***file2***I want to become human soon."
-      // Respond in JSON format like this:
-      // ***file1***
-      // {{
-      //   "word1": 0.224,
-      //   "word2": 0.003,
-      //   "word3": 0.503
-      // }}
-      // ***file2***
-      // {{
-      //   "word1": 0.102,
-      //   "word2": 0.332,
-      //   "word3": 0.607
-      // }}
-      //   Words: {customVec}
-      //   Content: {content}`
+// Score the following content from 0.000 to 1.000 for each of the given words.
+// Return only a JSON array of numbers in the same order as the words.
+// Do not include any additional text or formatting.
+// for example
+// Content: "***file1***I'm not really impressed, but it wasn't horrible either., ***file2***I want to become human soon."
+// Respond in JSON format like this:
+// ***file1***
+// {{
+//   "word1": 0.224,
+//   "word2": 0.003,
+//   "word3": 0.503
+// }}
+// ***file2***
+// {{
+//   "word1": 0.102,
+//   "word2": 0.332,
+//   "word3": 0.607
+// }}
+//   Words: {customVec}
+//   Content: {content}`
 
 ipcMain.handle('ollama:custom', async (_, files: string, customVecs: string[]): Promise<string> => {
   try {
@@ -269,7 +278,15 @@ ipcMain.handle('fileDatas:add', async (_, newFileDataList) => {
 })
 
 // handle axis datas ----------
-const customVectorSchemaStore = new Store<CustomVectorSchema[]>()
+const customVectorSchemaStore = new Store<CustomVectorStoreShape>({
+  defaults: {
+    customVectors: [
+      { id: 'ex', name: 'Embedding X' },
+      { id: 'ey', name: 'Embedding Y' },
+      { id: 'ez', name: 'Embedding Z' }
+    ]
+  }
+})
 
 ipcMain.handle('customVectorStore:get', async () => {
   return customVectorSchemaStore.get('customVectors')
@@ -295,7 +312,7 @@ ipcMain.handle('showItemInFolder', async (_, filePath: string) => {
 
 // base64
 ipcMain.handle('base64', async (_, filePath: string) => {
-  const buffer = await readFile(filePath); // 画像をバイナリで読み込む
+  const buffer = await readFile(filePath) // 画像をバイナリで読み込む
   const base64Image = buffer.toString('base64')
   const mimeType = filePath.endsWith('.png') ? 'image/png' : 'image/jpeg'
   const imageDataUrl = `data:${mimeType};base64,${base64Image}`

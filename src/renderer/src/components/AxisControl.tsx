@@ -7,27 +7,11 @@ function AxisControl(): React.ReactElement {
   const [axisX, setAxisX] = useAtom(axisXAtom)
   const [axisY, setAxisY] = useAtom(axisYAtom)
   const [axisZ, setAxisZ] = useAtom(axisZAtom)
-  const [axisList, setAxisList] = useState<string[]>(['ex', 'ey', 'ez'])
-  const [customAxisList, setCustomAxisList] = useState<CustomVectorSchema[]>([])
+  const [axisList, setAxisList] = useState<CustomVectorSchema[]>([])
 
   useEffect(() => {
-    window.api.getCustomVectorName().then(setCustomAxisList)
+    window.api.getCustomVectorName().then(setAxisList)
   }, [])
-
-  // useEffect(() => {
-  //   setAxisList((prevList) => [
-  //     ...new Set([...prevList, ...customAxisList.map((axis) => axis.name)])
-  //   ])
-  // }, [customAxisList])
-
-  const handleAxisId = (name: string): string => {
-    if (['ex', 'ey', 'ez'].includes(name)) return name
-
-    const axis = customAxisList.find((axis) => axis.name === name)
-
-    if (axis?.id) return axis.id
-    else return ''
-  }
 
   return (
     <div className="flex flex-col gap-4 w-full h-full justify-between  text-xs text-primary ">
@@ -35,12 +19,12 @@ function AxisControl(): React.ReactElement {
         X
         <select
           className="bg-mg p-1 rounded-md"
-          onChange={(e) => setAxisX(handleAxisId(e.target.value))}
+          onChange={(e) => setAxisX(e.target.value)}
           value={axisX}
         >
-          {axisList.map((axis: string) => (
-            <option key={axis} value={axis}>
-              {axis}
+          {axisList.map((axis: CustomVectorSchema) => (
+            <option key={axis.id} value={axis.id}>
+              {axis.name}
             </option>
           ))}
         </select>
@@ -49,12 +33,12 @@ function AxisControl(): React.ReactElement {
         Y
         <select
           className="bg-mg p-1 rounded-md"
-          onChange={(e) => setAxisY(handleAxisId(e.target.value))}
+          onChange={(e) => setAxisY(e.target.value)}
           value={axisY}
         >
-          {axisList.map((axis: string) => (
-            <option key={axis} value={axis}>
-              {axis}
+          {axisList.map((axis: CustomVectorSchema) => (
+            <option key={axis.id} value={axis.id}>
+              {axis.name}
             </option>
           ))}
         </select>
@@ -63,12 +47,12 @@ function AxisControl(): React.ReactElement {
         Z
         <select
           className="bg-mg p-1 rounded-md"
-          onChange={(e) => setAxisZ(handleAxisId(e.target.value))}
+          onChange={(e) => setAxisZ(e.target.value)}
           value={axisZ}
         >
-          {axisList.map((axis: string) => (
-            <option key={axis} value={axis}>
-              {axis}
+          {axisList.map((axis: CustomVectorSchema) => (
+            <option key={axis.id} value={axis.id}>
+              {axis.name}
             </option>
           ))}
         </select>
