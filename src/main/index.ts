@@ -155,23 +155,63 @@ ipcMain.handle('ollama:vision', async (_, imagePath: string): Promise<{ content:
   }
 })
 
+// `You are a scoring system. Do not add any explanations, greetings, or extra text.
+      // Score the following content from 0.000 to 1.000 for each of the given words.
+      // Return only a JSON array of numbers in the same order as the words.
+      // Do not include any additional text or formatting.
+      // for example
+      // Content: "***file1***I'm not really impressed, but it wasn't horrible either., ***file2***I want to become human soon."
+      // Respond in JSON format like this:
+      // ***file1***
+      // {{
+      //   "word1": 0.224,
+      //   "word2": 0.003,
+      //   "word3": 0.503
+      // }}
+      // ***file2***
+      // {{
+      //   "word1": 0.102,
+      //   "word2": 0.332,
+      //   "word3": 0.607
+      // }}
+      //   Words: {customVec}
+      //   Content: {content}`
+
 ipcMain.handle('ollama:custom', async (_, files: string, customVecs: string[]): Promise<string> => {
   try {
+    console.log('解析開始')
     const prompt = PromptTemplate.fromTemplate(
       `You are a scoring system. Do not add any explanations, greetings, or extra text.
-      Score the following content from 0.000 to 1.000 for each of the given words.
-      Return only a JSON array of numbers in the same order as the words.
-      Do not include any additional text or formatting.
-      for example
-      Content: "I'm not really impressed, but it wasn't horrible either."
-      Respond in JSON format like this:
+      You will be given multiple text files and a list of words.
+
+      Your task:
+      1. For each file, score the content from 0.000 to 1.000 for each word which is {customVec}.
+      2. Return each file's result as a separate block.
+      3. Each block should start with the filename (e.g. "1.txt"), then output a JSON object of the scores for that file.
+      4. Do not merge all scores into a single JSON. Keep each file's result isolated.
+
+      Example:
+      Input:
+      Words: ["para1", "para2", "para3"]
+      Content:
+      ***1.txt***I'm not really impressed, but it wasn't horrible either., ***2.txt***I want to become human soon.
+
+      Output:
+      1.txt
       {{
         "word1": 0.224,
         "word2": 0.003,
         "word3": 0.503
       }}
-        Words: {customVec}
-        Content: {content}`
+      2.txt
+      {{
+        "word1": 0.102,
+        "word2": 0.332,
+        "word3": 0.607
+      }}
+
+      Words: {customVec}
+      Content: {content}`
     )
     const chatModel = new ChatOllama({
       model: 'gemma3',
@@ -181,7 +221,7 @@ ipcMain.handle('ollama:custom', async (_, files: string, customVecs: string[]): 
 
     const chain = prompt.pipe(chatModel)
     const result = await chain.invoke({
-      customVec: customVecs.join(', '),
+      customVec: JSON.stringify(customVecs),
       content: files
     })
 
