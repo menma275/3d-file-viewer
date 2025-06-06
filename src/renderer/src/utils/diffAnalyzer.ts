@@ -119,12 +119,10 @@ const dataAnalyze = async (
 
         if (needAnalyze) {
           const gFileName = gFilePath.split('/').pop() || ''
-          unEmbedFiles.push(`***${gFileName}***${gFileContent}`)
-
           //画像をvisionモデルのLLMに文字に変換してもらう
           const graToText = await window.api.graphicToText(gFilePath)
-          // const graToBuff = await window.api.readFile(gFilePath)
-          // const base64Gra = graToText.base64
+          unEmbedFiles.push(`***${gFileName}***${graToText.content}`)
+
 
           //responseとすでにstoreされている、各ファイルのembeddings多次元データを全て取得してきて、PCRにかけて次元削減
           const gResponse: number[] = await window.api.embedding(graToText.content)
@@ -156,38 +154,54 @@ const dataAnalyze = async (
       }
     }
 
-    // if(isCustomNeed){
-    //     //以下は指定したパラメータに対してテキストモデルに判定してもらう処理
-    //     //customvectorshema.nameを持ってきてその単語を投げる
-    //     const customVecSchemas: CustomVectorSchema[] = await window.api.getCustomVectorName()
-    //     const customVecNames: string[] = customVecSchemas.map(c => c.name)
-    //     const newFileContents = unEmbedFiles.join(', ')
-    //     const scoreContent = await window.api.getCustomScore(newFileContents, customVecNames)
-    //     //出力がうまく返ってきてないからここの修正途中やで
-    //     //確認
-    //     let parsedScores: Record<string, number> = {}
-    //     const scoreJsonMatch = scoreContent.match(/```json\s*([\s\S]*?)\s*```/)
-    //     const scoreJson = scoreJsonMatch ? scoreJsonMatch[1] : null
-    //     if (scoreJson) {
-    //         try {
-    //             parsedScores = JSON.parse(scoreJson)
-    //         } catch (err) {
-    //             console.error('スコアのパースに失敗:', scoreContent)
-    //         }
-    //     }
+    if(isCustomNeed){
+        //以下は指定したパラメータに対してテキストモデルに判定してもらう処理
+        //customvectorshema.nameを持ってきてその単語を投げる
+        const customVecSchemas: CustomVectorSchema[] = await window.api.getCustomVectorName()
+        const customVecNames: string[] = customVecSchemas.map(c => c.name)
+        const newFileContents = unEmbedFiles.join(', ')
+    
+        const scoreContent = await window.api.getCustomScore(newFileContents, customVecNames)
+        console.log(`customscore:${scoreContent}`)
+        const parsedScores: Record<string, Record<string, number>> = {}
+        const entries = scoreContent
+          .replace(/```json|```/g, '')
+          .trim()
+          .split(/\n(?=[^\n]+\.(?:txt|md|jpg|jpeg|png))/)  //ファイルごとに分ける
 
-    //     const customVectorValues = customVecSchemas.map((schema) => ({
-    //         schemaId: schema.id,
-    //         value: typeof parsedScores[schema.name] === 'number' ? parsedScores[schema.name] : 1
-    //     }))
-    // }
+        for (const entry of entries) {
+          const match = entry.match(/^([^\n]+\.(?:txt|md|jpg|jpeg|png))\n\s*({[\s\S]*})$/)
+          if (match) {
+            const [, fileName, jsonPart] = match
+            try {
+              parsedScores[fileName] = JSON.parse(jsonPart)
+            } catch (e) {
+              console.error(`JSON parse error for ${fileName}:`, e)
+            }
+          }
+        }
+
+        //newFileDataListをJSON形式にパースしたscoreContentで上書きする
+        newFileDataList.forEach(file => {
+            const fileName = file.filePath.split('/').pop()
+            if (fileName && parsedScores[fileName]) {
+                const customVectorValues = customVecSchemas.map((schema) => ({
+                    schemaId: schema.id,
+                    value: typeof parsedScores[fileName][schema.name] === 'number'
+                    ? parsedScores[fileName][schema.name]
+                    : 1
+                }))
+                file.vectors.customVectorValues = customVectorValues
+            }
+        })
+    }
 
     console.log('custom解析完了')
 
     //解析後上書き保存できるようにidを持っておく
     const embedVecs = newFileDataList.map(file => ({
-      id: file.id,
-      embeddingRaw: file.vectors.embeddingRaw
+        id: file.id,
+        embeddingRaw: file.vectors.embeddingRaw
     }))
 
     //pcaへの入力データ
@@ -198,7 +212,7 @@ const dataAnalyze = async (
 
     const idToReducedVec = new Map<string, number[]>();
     embedVecs.forEach((data, index) => {
-      idToReducedVec.set(data.id, reducedVec[index])
+        idToReducedVec.set(data.id, reducedVec[index])
     })
 
     //更新されたものから新しく次元圧縮したものに上書き
