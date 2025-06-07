@@ -145,8 +145,8 @@ ipcMain.handle(
             {
               type: 'text',
               // text: 'あなたは画像解析システムです。画像の内容の説明だけを、流暢な日本語でプレーンテキストで出力してください。挨拶や説明、余計な文章は入れないでください。'
-              text: 'You are an image analysis system. Output only the description of the image contents in plain text in fluent Japanese. Do not include any greetings, explanations, or extra text.'
-              // text: 'You are an image analysis system. Output only the description of the image contents in plain text. Do not include any greetings, explanations, or extra text.'
+              // text: 'You are an image analysis system. Output only the description of the image contents in plain text in fluent Japanese. Do not include any greetings, explanations, or extra text.'
+              text: 'You are an image analysis system. Output only the description of the image contents in plain text. Do not include any greetings, explanations, or extra text.'
             }
           ]
         }
@@ -187,38 +187,45 @@ ipcMain.handle(
 //   Content: {content}`
 
 ipcMain.handle('ollama:custom', async (_, files: string, customVecs: string[]): Promise<string> => {
+  const names = [...files.matchAll(/\*\*\*(.+?)\*\*\*/g)].map((match) => match[1])
   try {
     console.log('解析開始')
     const prompt = PromptTemplate.fromTemplate(
       `You are a scoring system. Do not add any explanations, greetings, or extra text.
       You will be given multiple text files and a list of words.
-
       Your task:
-      1. For each file, score the content from 0.000 to 1.000 for each word which is {customVec}.
-      2. Return each file's result as a separate block.
-      3. Each block should start with the filename (e.g. "1.txt"), then output a JSON object of the scores for that file.
-      4. Do not merge all scores into a single JSON. Keep each file's result isolated.
-
+      1. For each file, score the content from 0.00 to 1.00 for each word which is {customVec}.
+      2. Please make sure that each key has a different value across the files.
+      3. Please make sure to analyze all the content I provided.
+      4. Use the correct file name which is {names} for the output
+      5. Return each file's result as a separate block.
+      6. Each block should start with the filename (e.g. "1.txt"), then output a JSON object of the scores for that file.
+      7. Do not merge all scores into a single JSON. Keep each file's result isolated.
       Example:
       Input:
       Words: ["para1", "para2", "para3"]
       Content:
-      ***1.txt***I'm not really impressed, but it wasn't horrible either., ***2.txt***I want to become human soon.
-
+      ***daylife.txt***I'm not really impressed, but it wasn't horrible either., ***ai.txt***I want to become human soon., ***hiking.txt***:I went hiking in the morning. The air smelled like pine and freedom. I should do this more often.
       Output:
-      1.txt
+      daylife.txt
       {{
-        "word1": 0.224,
-        "word2": 0.003,
-        "word3": 0.503
+        "para1": 0.27,
+        "para2": 0.73,
+        "para3": 0.56
       }}
-      2.txt
+      ai.txt
       {{
-        "word1": 0.102,
-        "word2": 0.332,
-        "word3": 0.607
+        "para1": 0.13,
+        "para2": 0.34,
+        "para3": 0.67
       }}
-
+      hiking.txt
+      {{
+        "para1":0.92,
+        "para2":0.54,
+        "para3":0.21
+      }}
+      Name: {names}
       Words: {customVec}
       Content: {content}`
     )
@@ -227,13 +234,12 @@ ipcMain.handle('ollama:custom', async (_, files: string, customVecs: string[]): 
       maxRetries: 2,
       temperature: 0
     })
-
     const chain = prompt.pipe(chatModel)
     const result = await chain.invoke({
       customVec: JSON.stringify(customVecs),
-      content: files
+      content: files,
+      names: names
     })
-
     if (typeof result.content === 'string') {
       return result.content
     } else {
@@ -244,6 +250,65 @@ ipcMain.handle('ollama:custom', async (_, files: string, customVecs: string[]): 
     return ''
   }
 })
+
+// ipcMain.handle('ollama:custom', async (_, files: string, customVecs: string[]): Promise<string> => {
+//   try {
+//     console.log('解析開始')
+//     const prompt = PromptTemplate.fromTemplate(
+//       `You are a scoring system. Do not add any explanations, greetings, or extra text.
+//       You will be given multiple text files and a list of words.
+//
+//       Your task:
+//       1. For each file, score the content from 0.000 to 1.000 for each word which is {customVec}.
+//       2. Return each file's result as a separate block.
+//       3. Each block should start with the filename (e.g. "1.txt"), then output a JSON object of the scores for that file.
+//       4. Do not merge all scores into a single JSON. Keep each file's result isolated.
+//
+//       Example:
+//       Input:
+//       Words: ["para1", "para2", "para3"]
+//       Content:
+//       ***1.txt***I'm not really impressed, but it wasn't horrible either., ***2.txt***I want to become human soon.
+//
+//       Output:
+//       1.txt
+//       {{
+//         "word1": 0.224,
+//         "word2": 0.003,
+//         "word3": 0.503
+//       }}
+//       2.txt
+//       {{
+//         "word1": 0.102,
+//         "word2": 0.332,
+//         "word3": 0.607
+//       }}
+//
+//       Words: {customVec}
+//       Content: {content}`
+//     )
+//     const chatModel = new ChatOllama({
+//       model: 'gemma3',
+//       maxRetries: 2,
+//       temperature: 0
+//     })
+//
+//     const chain = prompt.pipe(chatModel)
+//     const result = await chain.invoke({
+//       customVec: JSON.stringify(customVecs),
+//       content: files
+//     })
+//
+//     if (typeof result.content === 'string') {
+//       return result.content
+//     } else {
+//       return 'contentがstringではありません'
+//     }
+//   } catch (err) {
+//     console.error('ChatOllamaエラー:', err)
+//     return ''
+//   }
+// })
 
 ipcMain.handle('readFile', async (_, filePath) => {
   return await readFile(filePath, 'utf-8')

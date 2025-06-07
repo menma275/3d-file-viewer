@@ -210,13 +210,37 @@ function Planes(): React.ReactElement {
 
   useEffect(() => {
     const newPosition: THREE.Vector3[] = datas.map((data: FileData) => {
-      const originX = data.vectors.customVectorValues.find((v) => v.schemaId === axisX)?.value || 0
-      const originY = data.vectors.customVectorValues.find((v) => v.schemaId === axisY)?.value || 0
-      const originZ = data.vectors.customVectorValues.find((v) => v.schemaId === axisZ)?.value || 0
+      const originDataX = data.vectors.customVectorValues.find((v) => v.schemaId === axisX)
+      const originDataY = data.vectors.customVectorValues.find((v) => v.schemaId === axisY)
+      const originDataZ = data.vectors.customVectorValues.find((v) => v.schemaId === axisZ)
+
+      const defaultIds = ['ex', 'ey', 'ez']
+
+      const originDataXValue = originDataX?.value ?? 0
+      const originDataYValue = originDataY?.value ?? 0
+      const originDataZValue = originDataZ?.value ?? 0
+
+      const originDataXId = originDataX?.schemaId ?? ''
+      const originDataYId = originDataY?.schemaId ?? ''
+      const originDataZId = originDataZ?.schemaId ?? ''
+
+      const originX = defaultIds.includes(originDataXId)
+        ? originDataXValue
+        : (originDataXValue - 0.75) * 1.5
+      const originY = defaultIds.includes(originDataYId)
+        ? originDataYValue
+        : (originDataYValue - 0.75) * 1.5
+      const originZ = defaultIds.includes(originDataZId)
+        ? originDataZValue
+        : (originDataZValue - 0.75) * 1.5
 
       const x = originX * amp
       const y = originY * amp
       const z = originZ * amp
+
+      // const x = originDataXValue * amp
+      // const y = originDataYValue * amp
+      // const z = originDataZValue * amp
 
       return new THREE.Vector3(x, y, z)
     })
@@ -228,7 +252,7 @@ function Planes(): React.ReactElement {
     return datas.map((data, index) => (
       <Plane
         key={data.id}
-        isImage={data.fileType === 'jpg' || data.fileType === 'png'}
+        isImage={data.fileType === 'jpg' || data.fileType === 'jpeg' || data.fileType === 'png'}
         id={data.id}
         text={data.fileContent}
         position={positions[index]}
